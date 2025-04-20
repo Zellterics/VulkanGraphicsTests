@@ -203,7 +203,7 @@ private:
 
     void mainLoop() {
         //*--------------------------------------------
-        
+
         //---------------------------------------------
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
