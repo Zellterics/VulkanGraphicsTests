@@ -107,7 +107,7 @@ struct Vertex {
     }
 };
 //*-------------------------------------------------------------------------------------
-const std::vector<Vertex> vertices = {
+std::vector<Vertex> vertices = {
     {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
@@ -200,22 +200,47 @@ private:
         createCommandBuffers();
         createSyncObjects();
     }
-
+    //*-------------------------------------------------------------------
     void mainLoop() {
-        //*--------------------------------------------
-
-        //---------------------------------------------
+        int frame = 0;
+        //Update Vertex Buffer Variables
+        
         while (!glfwWindowShouldClose(window)) {
+            frame++;
+            if(frame > 100){
+                vertices[3].color = {100.0f / (float)frame, 100.0f / (float)frame, 100.0f / (float)frame};
+                updateVertexBuffer();
+            }
             glfwPollEvents();
             drawFrame();
-            //*----------------------
-            std::cout << "a";
+            
+            std::cout << frame << std::endl;
             constexpr int delay = 1000 / FPS;
             std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-            //------------------------
         }
         vkDeviceWaitIdle(device);
     }
+    
+    void updateVertexBuffer(){
+        static VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        static VkBuffer stagingBuffer;
+        static VkDeviceMemory stagingBufferMemory;
+        static bool isCreated = false;
+        if (!isCreated){
+            createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+            isCreated = true;
+        }
+        static void* MappedData;
+        static bool isMapped = false;
+        if(!isMapped){
+            vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &MappedData);
+            isMapped = true;
+        }
+        memcpy(MappedData, vertices.data(), (size_t) bufferSize);
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+    }
+
+    //----------------------------------------------------------------------
 
     void cleanupSwapChain() {
         for (auto framebuffer : swapChainFramebuffers) {
