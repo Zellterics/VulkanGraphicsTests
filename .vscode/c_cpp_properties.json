@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Win64",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${env:VULKAN_SDK}/Include",
+        "${workspaceFolder}/external/glfw/include"
+      ],
+      "defines": [
+        "GLFW_INCLUDE_VULKAN"
+      ],
+      "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.39.33519/bin/Hostx64/x64/cl.exe",
+      "intelliSenseMode": "windows-msvc-x64",
+      "cppStandard": "c++17"
+    }
+  ],
+  "version": 4
+}
