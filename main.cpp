@@ -24,6 +24,17 @@
 #include <chrono>
 #include <thread>
 
+//TESTS ERASE LATER
+#include <random>
+
+std::random_device rd;
+std::mt19937 rng(rd());
+
+int getRandomFloat(int min, int max) {
+    std::uniform_real_distribution<float> dist(min, max);
+    return dist(rng);
+}
+
 constexpr int FPS = 60;
 //--------------------------------------------------------------------------------------------
 
@@ -115,7 +126,7 @@ std::vector<Vertex> vertices = {
     {{1.0f, -1.0f}, {1.0f, 0.0f, 1.0f}}
 };
 
-const std::vector<uint16_t> indices = {
+std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0, 4, 1, 0
 };
 //---------------------------------------------------------------------------------------
@@ -153,12 +164,13 @@ private:
     VkPipeline graphicsPipeline;
 
     VkCommandPool commandPool;
-
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
-
+    //*------------------------------------
+    VkBuffer vertexBuffers[MAX_FRAMES_IN_FLIGHT];
+    VkDeviceMemory vertexBufferMemorys[MAX_FRAMES_IN_FLIGHT];
+    
+    VkBuffer indexBuffers[MAX_FRAMES_IN_FLIGHT];
+    VkDeviceMemory indexBufferMemorys[MAX_FRAMES_IN_FLIGHT];
+    //-------------------------------------
     std::vector<VkCommandBuffer> commandBuffers;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -200,7 +212,7 @@ private:
         createCommandBuffers();
         createSyncObjects();
     }
-    //*-------------------------------------------------------------------
+    //*---------------------------------------------------------------------
     void mainLoop() {
         int frame = 0;
         //Update Vertex Buffer Variables
@@ -208,12 +220,18 @@ private:
         while (!glfwWindowShouldClose(window)) {
             frame++;
             if(frame > 100){
-                vertices[3].color = {100.0f / (float)frame, 100.0f / (float)frame, 100.0f / (float)frame};
-                updateVertexBuffer();
+                vertices.push_back({{getRandomFloat(-100.0f,100.0f)/100.0f, getRandomFloat(-100.0f,100.0f)/100.0f}, {getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f}});
+                if (vertices.size() >= 3) {
+                    uint32_t base = static_cast<uint32_t>(vertices.size()) - 1;
+                    indices.push_back(base);
+                    indices.push_back(base - 1);
+                    indices.push_back(base - 2);
+                }
+                updateIndexBuffer(currentFrame);
+                updateVertexBuffer(currentFrame);
             }
             glfwPollEvents();
             drawFrame();
-            
             std::cout << frame << std::endl;
             constexpr int delay = 1000 / FPS;
             std::this_thread::sleep_for(std::chrono::milliseconds(delay));
@@ -221,25 +239,81 @@ private:
         vkDeviceWaitIdle(device);
     }
     
-    void updateVertexBuffer(){
-        static VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+    void updateVertexBuffer(uint32_t frameIndex){
+        static VkDeviceSize bufferSizes[MAX_FRAMES_IN_FLIGHT] = { 0 };
+        VkDeviceSize newBufferSize = sizeof(vertices[0]) * vertices.size();
         static VkBuffer stagingBuffer;
         static VkDeviceMemory stagingBufferMemory;
         static bool isCreated = false;
+        static void* mappedData;
+        static bool isMapped = false;
+        if (bufferSizes[frameIndex] < newBufferSize){
+            bufferSizes[frameIndex] = newBufferSize;
+            if(vertexBuffers[frameIndex]){
+                vkWaitForFences(device, 1, &inFlightFences[frameIndex], VK_TRUE, UINT64_MAX);
+                vkDestroyBuffer(device, vertexBuffers[frameIndex], nullptr);
+                vkFreeMemory(device, vertexBufferMemorys[frameIndex], nullptr);
+            }    
+            createBuffer(bufferSizes[frameIndex], VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffers[frameIndex], vertexBufferMemorys[frameIndex]);
+            if(stagingBuffer){
+                vkDestroyBuffer(device, stagingBuffer, nullptr);
+                vkFreeMemory(device, stagingBufferMemory, nullptr);
+                isMapped = false;
+                isCreated = false;
+                mappedData = nullptr;
+            }
+        }
+
         if (!isCreated){
-            createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+            createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
             isCreated = true;
         }
-        static void* MappedData;
-        static bool isMapped = false;
+        
         if(!isMapped){
-            vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &MappedData);
+            vkMapMemory(device, stagingBufferMemory, 0, newBufferSize, 0, &mappedData);
             isMapped = true;
         }
-        memcpy(MappedData, vertices.data(), (size_t) bufferSize);
-        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        memcpy(mappedData, vertices.data(), (size_t) newBufferSize);
+        copyBuffer(stagingBuffer, vertexBuffers[frameIndex], newBufferSize);
     }
 
+
+    void updateIndexBuffer(uint32_t frameIndex){
+        static VkDeviceSize bufferSizes[MAX_FRAMES_IN_FLIGHT] = {0};
+        VkDeviceSize newBufferSize = sizeof(indices[0]) * indices.size();
+        static VkBuffer stagingBuffer;
+        static VkDeviceMemory stagingBufferMemory;
+        void* mappedData;
+        static bool isMapped = false;
+        static bool isCreated = false;
+
+        if(bufferSizes[frameIndex] < newBufferSize){
+            bufferSizes[frameIndex] = newBufferSize;
+            if(indexBuffers[frameIndex]){
+                vkWaitForFences(device, 1, &inFlightFences[frameIndex], VK_TRUE, UINT64_MAX);
+                vkDestroyBuffer(device, indexBuffers[frameIndex], nullptr);
+                vkFreeMemory(device, indexBufferMemorys[frameIndex], nullptr);
+            }
+            createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffers[frameIndex], indexBufferMemorys[frameIndex]);
+            if(stagingBuffer){
+                vkDestroyBuffer(device, stagingBuffer, nullptr);
+                vkFreeMemory(device, stagingBufferMemory, nullptr);
+                isMapped = false;
+                isCreated = false;
+                mappedData = nullptr;
+            }
+        }
+        if (!isCreated){
+            createBuffer(newBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        }
+        if (!isMapped){
+            vkMapMemory(device, stagingBufferMemory, 0, newBufferSize, 0, &mappedData);
+            isMapped = true;
+        }
+        
+        memcpy(mappedData, indices.data(), (size_t) bufferSizes[frameIndex]);
+        copyBuffer(stagingBuffer, indexBuffers[frameIndex], bufferSizes[frameIndex]);
+    }
     //----------------------------------------------------------------------
 
     void cleanupSwapChain() {
@@ -261,16 +335,15 @@ private:
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         vkDestroyRenderPass(device, renderPass, nullptr);
 
-        vkDestroyBuffer(device, indexBuffer, nullptr);
-        vkFreeMemory(device, indexBufferMemory, nullptr);
-
-        vkDestroyBuffer(device, vertexBuffer, nullptr);
-        vkFreeMemory(device, vertexBufferMemory, nullptr);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
             vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
             vkDestroyFence(device, inFlightFences[i], nullptr);
+            vkDestroyBuffer(device, vertexBuffers[i], nullptr);
+            vkFreeMemory(device, vertexBufferMemorys[i], nullptr);
+            vkDestroyBuffer(device, indexBuffers[i], nullptr);
+            vkFreeMemory(device, indexBufferMemorys[i], nullptr);
         }
 
         vkDestroyCommandPool(device, commandPool, nullptr);
@@ -707,42 +780,44 @@ private:
 
     void createVertexBuffer() {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+                memcpy(data, vertices.data(), (size_t) bufferSize);
+            vkUnmapMemory(device, stagingBufferMemory);
 
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, vertices.data(), (size_t) bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+            createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffers[i], vertexBufferMemorys[i]);
 
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+            copyBuffer(stagingBuffer, vertexBuffers[i], bufferSize);
 
-        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+        }
     }
 
     void createIndexBuffer() {
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory;
+            createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+                memcpy(data, indices.data(), (size_t) bufferSize);
+            vkUnmapMemory(device, stagingBufferMemory);
 
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, indices.data(), (size_t) bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
+            createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffers[i], indexBufferMemorys[i]);
 
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+            copyBuffer(stagingBuffer, indexBuffers[i], bufferSize);
 
-        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+            vkDestroyBuffer(device, stagingBuffer, nullptr);
+            vkFreeMemory(device, stagingBufferMemory, nullptr);
+        }
     }
 
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
@@ -867,13 +942,15 @@ private:
             scissor.offset = {0, 0};
             scissor.extent = swapChainExtent;
             vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-            VkBuffer vertexBuffers[] = {vertexBuffer};
+            //*--------------------------------------------------------
+            VkBuffer vb = vertexBuffers[currentFrame];
             VkDeviceSize offsets[] = {0};
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-            vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vb, offsets);
+            
+            VkBuffer ib = indexBuffers[currentFrame];
+            vkCmdBindIndexBuffer(commandBuffer, ib, 0, VK_INDEX_TYPE_UINT16);
+            //std::cout << "drawing " << indices.size() / 3 << " triangles";
+            //---------------------------------------------------------
             vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
         vkCmdEndRenderPass(commandBuffer);
