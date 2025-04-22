@@ -12,13 +12,18 @@ add_subdirectory(external/glm)
 include_directories(
     external/glfw/include
     "$ENV{VULKAN_SDK}/Include"
+    core
+    complementary
+    types
 )
 
 # Vincular directorios de librerías
 link_directories("$ENV{VULKAN_SDK}/Lib")
 
 # Ejecutable
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} 
+main.cpp
+)
 
 # Linkeo
 target_link_libraries(${PROJECT_NAME}
