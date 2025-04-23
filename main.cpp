@@ -1,7 +1,7 @@
-#include "core/core.cpp"
+#include "core.cpp"
 
 int main() {
-    HelloTriangleApplication app;
+    ProtoThiApp app;
 
     try {
         app.run();

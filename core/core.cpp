@@ -2,15 +2,16 @@
 #include "core.h"
 #include "mainLoop.cpp"
 #include "init.cpp"
+#include "uniformBuffer.cpp"
 
-void HelloTriangleApplication::run() {
+void ProtoThiApp::run() {
     initWindow();
     initVulkan();
     mainLoop();
     cleanup();
 }
 
-void HelloTriangleApplication::initWindow() {
+void ProtoThiApp::initWindow() {
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -20,7 +21,7 @@ void HelloTriangleApplication::initWindow() {
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
 
-void HelloTriangleApplication::initVulkan() {
+void ProtoThiApp::initVulkan() {
     createInstance();
     setupDebugMessenger();
     createSurface();
@@ -29,16 +30,20 @@ void HelloTriangleApplication::initVulkan() {
     createSwapChain();
     createImageViews();
     createRenderPass();
+    createDescriptorSetLayout();
     createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
-    createVertexBuffer();
-    createIndexBuffer();
+    createVertexBuffers();
+    createIndexBuffers();
+    createUniformBuffers();
+    createDescriptorPool();
+    createDescriptorSets();
     createCommandBuffers();
     createSyncObjects();
 }
 
-void HelloTriangleApplication::cleanup() {
+void ProtoThiApp::cleanup() {
     cleanupSwapChain();
 
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
@@ -54,7 +59,12 @@ void HelloTriangleApplication::cleanup() {
         vkFreeMemory(device, vertexBufferMemorys[i], nullptr);
         vkDestroyBuffer(device, indexBuffers[i], nullptr);
         vkFreeMemory(device, indexBufferMemorys[i], nullptr);
+        vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+        vkFreeMemory(device, uniformBufferMemorys[i], nullptr);
     }
+
+    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
     vkDestroyCommandPool(device, commandPool, nullptr);
 
@@ -63,7 +73,7 @@ void HelloTriangleApplication::cleanup() {
     if (enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
     }
-
+    
     vkDestroySurfaceKHR(instance, surface, nullptr);
     vkDestroyInstance(instance, nullptr);
 
@@ -72,7 +82,7 @@ void HelloTriangleApplication::cleanup() {
     glfwTerminate();
 }
 
-void HelloTriangleApplication::drawFrame() {
+void ProtoThiApp::drawFrame() {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;

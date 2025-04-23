@@ -1,7 +1,7 @@
 #pragma once
 #include "core.h"
 
-void HelloTriangleApplication::updateVertexBuffer(uint32_t frameIndex){
+void ProtoThiApp::updateVertexBuffers(uint32_t frameIndex){
     static VkDeviceSize bufferSizes[MAX_FRAMES_IN_FLIGHT] = { 0 };
     VkDeviceSize newBufferSize = sizeof(vertices[0]) * vertices.size();
     static VkBuffer stagingBuffer;
@@ -40,7 +40,7 @@ void HelloTriangleApplication::updateVertexBuffer(uint32_t frameIndex){
 }
 
 
-void HelloTriangleApplication::updateIndexBuffer(uint32_t frameIndex){
+void ProtoThiApp::updateIndexBuffers(uint32_t frameIndex){
     static VkDeviceSize bufferSizes[MAX_FRAMES_IN_FLIGHT] = {0};
     VkDeviceSize newBufferSize = sizeof(indices[0]) * indices.size();
     static VkBuffer stagingBuffer;

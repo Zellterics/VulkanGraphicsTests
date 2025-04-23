@@ -15,13 +15,13 @@
 #include <limits>
 #include <array>
 #include <set>
-//*-------------------------------------------------------------------------------------------
 #include <chrono>
 #include <thread>
 
 #include "handMade.h"
 #include "vertex.h"
 #include "vulkanSupport.h"
+#include "uniformBufferObject.h"
 
 constexpr int FPS = 60;
 
@@ -31,18 +31,20 @@ const uint32_t HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 3;
 
 std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}},
-    {{1.0f, -1.0f}, {1.0f, 0.0f, 1.0f}}
+    {{-50.f, -50.f}, {1.0f, 0.0f, 0.0f}},
+    {{50.f, -50.f}, {0.0f, 1.0f, 0.0f}},
+    {{50.f, 50.f}, {0.0f, 0.0f, 1.0f}},
+    {{-50.f, 50.f}, {1.0f, 1.0f, 1.0f}},
+    {{100.f, -100.f}, {1.0f, 0.0f, 1.0f}}
 };
+
+UniformBufferObject ubo{};
 
 std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0, 4, 1, 0
 };
 //---------------------------------------------------------------------------------------
-class HelloTriangleApplication {
+class ProtoThiApp {
 public:
     void run();
 private:
@@ -76,6 +78,13 @@ private:
     
     VkBuffer indexBuffers[MAX_FRAMES_IN_FLIGHT];
     VkDeviceMemory indexBufferMemorys[MAX_FRAMES_IN_FLIGHT];
+
+    VkBuffer uniformBuffers[MAX_FRAMES_IN_FLIGHT];
+    VkDeviceMemory uniformBufferMemorys[MAX_FRAMES_IN_FLIGHT];
+
+    VkDescriptorSetLayout descriptorSetLayout;
+    VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
+    VkDescriptorPool descriptorPool;
     //-------------------------------------
     std::vector<VkCommandBuffer> commandBuffers;
 
@@ -92,12 +101,13 @@ private:
     void cleanupSwapChain();
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+        auto app = reinterpret_cast<ProtoThiApp*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
     }
 
-    void updateVertexBuffer(uint32_t frameIndex);
-    void updateIndexBuffer(uint32_t frameIndex);
+    void updateVertexBuffers(uint32_t frameIndex);
+    void updateIndexBuffers(uint32_t frameIndex);
+    void updateUniformBuffers(uint32_t frameIndex);
     void cleanup();
     void recreateSwapChain();
     void createInstance();
@@ -112,8 +122,12 @@ private:
     void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
-    void createVertexBuffer();
-    void createIndexBuffer();
+    void createVertexBuffers();
+    void createIndexBuffers();
+    void createDescriptorSetLayout();
+    void createDescriptorPool();
+    void createDescriptorSets();
+    void createUniformBuffers();
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -138,7 +152,6 @@ private:
         if (!file.is_open()) {
             throw std::runtime_error("failed to open file!");
         }
-
         size_t fileSize = (size_t) file.tellg();
         std::vector<char> buffer(fileSize);
 
