@@ -31,6 +31,7 @@ void ProtoThiApp::initVulkan() {
     createImageViews();
     createRenderPass();
     createDescriptorSetLayout();
+    createBasicGraphicsPipeline();
     createCircleGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
@@ -38,6 +39,7 @@ void ProtoThiApp::initVulkan() {
     createIndexBuffers();
     createQuadBuffer();
     createQuadIndexBuffer();
+    createCircleBuffer();
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
@@ -48,8 +50,6 @@ void ProtoThiApp::initVulkan() {
 void ProtoThiApp::cleanup() {
     cleanupSwapChain();
 
-    vkDestroyPipeline(device, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
     vkDestroyBuffer(device, quadBuffer, nullptr);
     vkFreeMemory(device, quadBufferMemory, nullptr);
@@ -66,7 +66,25 @@ void ProtoThiApp::cleanup() {
         vkFreeMemory(device, indexBufferMemorys[i], nullptr);
         vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         vkFreeMemory(device, uniformBufferMemorys[i], nullptr);
+        vkDestroyBuffer(device, circleBuffers[i], nullptr);
+        vkFreeMemory(device, circleBufferMemorys[i], nullptr);
     }
+
+    // while(!graphicsPipelines.empty()){
+    //     vkDestroyPipeline(device, graphicsPipelines.back(), nullptr);
+    //     graphicsPipelines.pop_back();
+    // }
+
+    // while(!pipelineLayouts.empty()){
+    //     vkDestroyPipelineLayout(device, pipelineLayouts.back(), nullptr);
+    //     pipelineLayouts.pop_back();
+    // }
+    for(int i = 0; i < 2; i++){
+        vkDestroyPipeline(device, graphicsPipelines[i], nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayouts[i], nullptr);
+    }
+    
+
 
     while(!stagingBuffers.empty()){
         vkDestroyBuffer(device, *stagingBuffers.back(), nullptr);

@@ -92,7 +92,7 @@ void ProtoThiApp::createBasicGraphicsPipeline() {
     basicPipelineLayoutInfo.pushConstantRangeCount = 0;
     basicPipelineLayoutInfo.pPushConstantRanges = nullptr;
 
-    if (vkCreatePipelineLayout(device, &basicPipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &basicPipelineLayoutInfo, nullptr, &pipelineLayouts[0]) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 
@@ -107,12 +107,12 @@ void ProtoThiApp::createBasicGraphicsPipeline() {
     basicPipelineInfo.pMultisampleState = &basicMultisampling;
     basicPipelineInfo.pColorBlendState = &basicColorBlending;
     basicPipelineInfo.pDynamicState = &basicDynamicState;
-    basicPipelineInfo.layout = pipelineLayout;
+    basicPipelineInfo.layout = pipelineLayouts[0];
     basicPipelineInfo.renderPass = renderPass;
     basicPipelineInfo.subpass = 0;
     basicPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &basicPipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &basicPipelineInfo, nullptr, &graphicsPipelines[0]) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 
@@ -149,11 +149,19 @@ void ProtoThiApp::createCircleGraphicsPipeline() {
 
     auto quadBindingDescription = Quad::getBindingDescription();
     auto quadAttributeDescriptions = Quad::getAttributeDescriptions();
+    auto circleBindingDescription = Circle::getBindingDescription();
+    auto circleAttributeDescriptions = Circle::getAttributeDescriptions();
 
-    circleVertexInputInfo.vertexBindingDescriptionCount = 1;
-    circleVertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(quadAttributeDescriptions.size());
-    circleVertexInputInfo.pVertexBindingDescriptions = &quadBindingDescription;
-    circleVertexInputInfo.pVertexAttributeDescriptions = quadAttributeDescriptions.data();
+    VkVertexInputBindingDescription bindingDescription[] = {quadBindingDescription, circleBindingDescription};
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+    attributeDescriptions.insert(attributeDescriptions.end(), quadAttributeDescriptions.begin(), quadAttributeDescriptions.end());
+    attributeDescriptions.insert(attributeDescriptions.end(), circleAttributeDescriptions.begin(), circleAttributeDescriptions.end());
+
+
+    circleVertexInputInfo.vertexBindingDescriptionCount = 2;
+    circleVertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(quadAttributeDescriptions.size() + circleAttributeDescriptions.size());
+    circleVertexInputInfo.pVertexBindingDescriptions = bindingDescription;
+    circleVertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo circleInputAssembly{};
     circleInputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -213,7 +221,7 @@ void ProtoThiApp::createCircleGraphicsPipeline() {
     circlePipelineLayoutInfo.pushConstantRangeCount = 0;
     circlePipelineLayoutInfo.pPushConstantRanges = nullptr;
 
-    if (vkCreatePipelineLayout(device, &circlePipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
+    if (vkCreatePipelineLayout(device, &circlePipelineLayoutInfo, nullptr, &pipelineLayouts[1]) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 
@@ -228,12 +236,12 @@ void ProtoThiApp::createCircleGraphicsPipeline() {
     circlePipelineInfo.pMultisampleState = &circleMultisampling;
     circlePipelineInfo.pColorBlendState = &circleColorBlending;
     circlePipelineInfo.pDynamicState = &circleDynamicState;
-    circlePipelineInfo.layout = pipelineLayout;
+    circlePipelineInfo.layout = pipelineLayouts[1];
     circlePipelineInfo.renderPass = renderPass;
     circlePipelineInfo.subpass = 0;
     circlePipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &circlePipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) {
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &circlePipelineInfo, nullptr, &graphicsPipelines[1]) != VK_SUCCESS) {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
 

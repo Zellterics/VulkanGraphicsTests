@@ -61,8 +61,16 @@ void ProtoThiApp::createQuadBuffer(){
 
 void ProtoThiApp::createQuadIndexBuffer(){
     VkDeviceSize bufferSize = sizeof(quadIndices[0]) * quadIndices.size();
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, quadIndexBuffer, quadIndexBufferMemory);
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, quadIndexBuffer, quadIndexBufferMemory);
     uploadBuffer(bufferSize, &quadIndexBuffer, quadIndices.data());
+}
+
+void ProtoThiApp::createCircleBuffer(){
+    VkDeviceSize bufferSize = sizeof(circleCenters[0]) * circleCenters.size();
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, circleBuffers[i], circleBufferMemorys[i]);
+        uploadBuffer(bufferSize, &circleBuffers[i], circleCenters.data());
+    }
 }
 
 void ProtoThiApp::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
@@ -172,7 +180,7 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+        
 
         VkViewport viewport{};
         viewport.x = 0.0f;
@@ -187,25 +195,42 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
         scissor.offset = {0, 0};
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-        //*--------------------------------------------------------
-        vkCmdBindDescriptorSets(
-            commandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            pipelineLayout,
-            0, 1, &descriptorSets[currentFrame],
-            0, nullptr
-        );
+        {
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0]);
+            vkCmdBindDescriptorSets(
+                commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipelineLayouts[0],
+                0, 1, &descriptorSets[currentFrame],
+                0, nullptr
+            );
 
-        VkBuffer vb = vertexBuffers[currentFrame];
-        VkDeviceSize offsets[] = {0};
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vb, offsets);
-        
-        VkBuffer ib = indexBuffers[currentFrame];
-        vkCmdBindIndexBuffer(commandBuffer, ib, 0, VK_INDEX_TYPE_UINT16);
-        //std::cout << "drawing " << indices.size() / 3 << " triangles";
-        //---------------------------------------------------------
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+            VkBuffer vb = vertexBuffers[currentFrame];
+            VkDeviceSize offsets[] = {0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vb, offsets);
+            
+            VkBuffer ib = indexBuffers[currentFrame];
+            vkCmdBindIndexBuffer(commandBuffer, ib, 0, VK_INDEX_TYPE_UINT16);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        }
+        {
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[1]);
+            vkCmdBindDescriptorSets(
+                commandBuffer,
+                VK_PIPELINE_BIND_POINT_GRAPHICS,
+                pipelineLayouts[0],
+                0, 1, &descriptorSets[currentFrame],
+                0, nullptr
+            );
 
+            VkBuffer vb[] = {quadBuffer, circleBuffers[currentFrame]};
+            VkDeviceSize offsets[] = {0,0};
+            vkCmdBindVertexBuffers(commandBuffer, 0, 2, vb, offsets);
+            
+            VkBuffer ib = quadIndexBuffer;
+            vkCmdBindIndexBuffer(commandBuffer, ib, 0, VK_INDEX_TYPE_UINT16);
+            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(quadIndices.size()), circleCenters.size(), 0, 0, 0);
+        }
     vkCmdEndRenderPass(commandBuffer);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
