@@ -9,7 +9,7 @@ Right now it doesn't have much but I plan to update it for some time
 
 Install the vulkan sdk on the official website and enable everything except for Volk if you don't want it, then just compile with cmake.
 
-every other dependency is already in the external folder.
+every other dependency has it's folder named, just install from git to there.
 
 ## Platform
 
