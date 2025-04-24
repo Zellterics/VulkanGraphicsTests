@@ -31,11 +31,15 @@ void ProtoThiApp::initVulkan() {
     createImageViews();
     createRenderPass();
     createDescriptorSetLayout();
-    createGraphicsPipeline();
+    createBasicGraphicsPipeline();
+    createCircleGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
     createVertexBuffers();
     createIndexBuffers();
+    createQuadBuffer();
+    createQuadIndexBuffer();
+    createCircleBuffer();
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
@@ -46,10 +50,11 @@ void ProtoThiApp::initVulkan() {
 void ProtoThiApp::cleanup() {
     cleanupSwapChain();
 
-    vkDestroyPipeline(device, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
-
+    vkDestroyBuffer(device, quadBuffer, nullptr);
+    vkFreeMemory(device, quadBufferMemory, nullptr);
+    vkDestroyBuffer(device, quadIndexBuffer, nullptr);
+    vkFreeMemory(device, quadIndexBufferMemory, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -61,6 +66,34 @@ void ProtoThiApp::cleanup() {
         vkFreeMemory(device, indexBufferMemorys[i], nullptr);
         vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         vkFreeMemory(device, uniformBufferMemorys[i], nullptr);
+        vkDestroyBuffer(device, circleBuffers[i], nullptr);
+        vkFreeMemory(device, circleBufferMemorys[i], nullptr);
+    }
+
+    // while(!graphicsPipelines.empty()){
+    //     vkDestroyPipeline(device, graphicsPipelines.back(), nullptr);
+    //     graphicsPipelines.pop_back();
+    // }
+
+    // while(!pipelineLayouts.empty()){
+    //     vkDestroyPipelineLayout(device, pipelineLayouts.back(), nullptr);
+    //     pipelineLayouts.pop_back();
+    // }
+    for(int i = 0; i < 2; i++){
+        vkDestroyPipeline(device, graphicsPipelines[i], nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayouts[i], nullptr);
+    }
+    
+
+
+    while(!stagingBuffers.empty()){
+        vkDestroyBuffer(device, *stagingBuffers.back(), nullptr);
+        stagingBuffers.pop_back();
+    }
+
+    while(!stagingBufferMemorys.empty()){
+        vkFreeMemory(device, *stagingBufferMemorys.back(), nullptr);
+        stagingBufferMemorys.pop_back();
     }
 
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);

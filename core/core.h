@@ -23,6 +23,9 @@
 #include "vulkanSupport.h"
 #include "uniformBufferObject.h"
 
+#include "quad.h"
+#include "circle.h"
+
 constexpr int FPS = 60;
 
 const uint32_t WIDTH = 800;
@@ -39,6 +42,23 @@ std::vector<Vertex> vertices = {
 };
 
 UniformBufferObject ubo{};
+
+std::vector<Quad> quadVertices = {
+    {{-1.f, -1.f}, {-1.0f, -1.0f}},
+    {{1.f, -1.f}, {1.0f, -1.0f}},
+    {{1.f, 1.f}, {1.0f, 1.0f}},
+    {{-1.f, 1.f}, {-1.0f, 1.0f}}
+};
+
+std::vector<Circle> circleCenters = {
+    {{-50.f, -50.f},{25.f}, {1.0f, 0.0f, 0.0f}},
+    {{50.f, -50.f},{50.f}, {0.0f, 1.0f, 0.0f}},
+    {{50.f, 50.f},{20.f}, {0.0f, 0.0f, 1.0f}},
+    {{-50.f, 50.f},{30.f}, {1.0f, 1.0f, 1.0f}},
+    {{100.f, -100.f},{35.f}, {1.0f, 0.0f, 1.0f}}
+};
+
+std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};
 
 std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0, 4, 1, 0
@@ -68,8 +88,8 @@ private:
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkRenderPass renderPass;
-    VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
+    VkPipelineLayout pipelineLayouts[2];
+    VkPipeline graphicsPipelines[2];
 
     VkCommandPool commandPool;
     //*------------------------------------
@@ -81,6 +101,18 @@ private:
 
     VkBuffer uniformBuffers[MAX_FRAMES_IN_FLIGHT];
     VkDeviceMemory uniformBufferMemorys[MAX_FRAMES_IN_FLIGHT];
+
+    VkBuffer quadBuffer;
+    VkDeviceMemory quadBufferMemory;
+
+    VkBuffer circleBuffers[MAX_FRAMES_IN_FLIGHT];
+    VkDeviceMemory circleBufferMemorys[MAX_FRAMES_IN_FLIGHT];
+    
+    VkBuffer quadIndexBuffer;
+    VkDeviceMemory quadIndexBufferMemory;
+
+    std::vector<VkBuffer*> stagingBuffers;
+    std::vector<VkDeviceMemory*> stagingBufferMemorys;
 
     VkDescriptorSetLayout descriptorSetLayout;
     VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
@@ -108,6 +140,7 @@ private:
     void updateVertexBuffers(uint32_t frameIndex);
     void updateIndexBuffers(uint32_t frameIndex);
     void updateUniformBuffers(uint32_t frameIndex);
+    void updateCircleBuffers(uint32_t frameIndex);
     void cleanup();
     void recreateSwapChain();
     void createInstance();
@@ -119,11 +152,18 @@ private:
     void createSwapChain();
     void createImageViews();
     void createRenderPass();
-    void createGraphicsPipeline();
+    void createBasicGraphicsPipeline();
+    void createCircleGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
     void createVertexBuffers();
     void createIndexBuffers();
+    void createQuadBuffer();
+    void createQuadIndexBuffer();
+    void createCircleBuffer();
+    void uploadBuffer(VkDeviceSize bufferSize, VkBuffer *buffer, void* bufferData);
+    void saveStagingBuffer(VkBuffer *buffer);
+    void saveStagingBufferMemorys(VkDeviceMemory *bufferMemory);
     void createDescriptorSetLayout();
     void createDescriptorPool();
     void createDescriptorSets();
