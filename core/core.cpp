@@ -31,11 +31,13 @@ void ProtoThiApp::initVulkan() {
     createImageViews();
     createRenderPass();
     createDescriptorSetLayout();
-    createGraphicsPipeline();
+    createCircleGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
     createVertexBuffers();
     createIndexBuffers();
+    createQuadBuffer();
+    createQuadIndexBuffer();
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
@@ -49,7 +51,10 @@ void ProtoThiApp::cleanup() {
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
-
+    vkDestroyBuffer(device, quadBuffer, nullptr);
+    vkFreeMemory(device, quadBufferMemory, nullptr);
+    vkDestroyBuffer(device, quadIndexBuffer, nullptr);
+    vkFreeMemory(device, quadIndexBufferMemory, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -61,6 +66,16 @@ void ProtoThiApp::cleanup() {
         vkFreeMemory(device, indexBufferMemorys[i], nullptr);
         vkDestroyBuffer(device, uniformBuffers[i], nullptr);
         vkFreeMemory(device, uniformBufferMemorys[i], nullptr);
+    }
+
+    while(!stagingBuffers.empty()){
+        vkDestroyBuffer(device, *stagingBuffers.back(), nullptr);
+        stagingBuffers.pop_back();
+    }
+
+    while(!stagingBufferMemorys.empty()){
+        vkFreeMemory(device, *stagingBufferMemorys.back(), nullptr);
+        stagingBufferMemorys.pop_back();
     }
 
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);

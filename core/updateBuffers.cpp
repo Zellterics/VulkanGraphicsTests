@@ -1,6 +1,13 @@
 #pragma once
 #include "core.h"
 
+void ProtoThiApp::saveStagingBuffer(VkBuffer *buffer){
+    stagingBuffers.push_back((buffer));
+}
+void ProtoThiApp::saveStagingBufferMemorys(VkDeviceMemory *bufferMemory){
+    stagingBufferMemorys.push_back((bufferMemory));
+}
+
 void ProtoThiApp::updateVertexBuffers(uint32_t frameIndex){
     static VkDeviceSize bufferSizes[MAX_FRAMES_IN_FLIGHT] = { 0 };
     VkDeviceSize newBufferSize = sizeof(vertices[0]) * vertices.size();
@@ -9,6 +16,12 @@ void ProtoThiApp::updateVertexBuffers(uint32_t frameIndex){
     static bool isCreated = false;
     static void* mappedData;
     static bool isMapped = false;
+    static bool savedBuffer = false;
+    if(!savedBuffer){
+        saveStagingBuffer(&stagingBuffer);
+        saveStagingBufferMemorys(&stagingBufferMemory);
+        savedBuffer = true;
+    }
     if (bufferSizes[frameIndex] < newBufferSize){
         bufferSizes[frameIndex] = newBufferSize;
         if(vertexBuffers[frameIndex]){
@@ -48,6 +61,12 @@ void ProtoThiApp::updateIndexBuffers(uint32_t frameIndex){
     static void* mappedData;
     static bool isMapped = false;
     static bool isCreated = false;
+    static bool savedBuffer = false;
+    if(!savedBuffer){
+        saveStagingBuffer(&stagingBuffer);
+        saveStagingBufferMemorys(&stagingBufferMemory);
+        savedBuffer = true;
+    }
 
     if(bufferSizes[frameIndex] < newBufferSize){
         bufferSizes[frameIndex] = newBufferSize;

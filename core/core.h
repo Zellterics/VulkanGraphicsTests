@@ -23,6 +23,8 @@
 #include "vulkanSupport.h"
 #include "uniformBufferObject.h"
 
+#include "quad.h"
+
 constexpr int FPS = 60;
 
 const uint32_t WIDTH = 800;
@@ -39,6 +41,15 @@ std::vector<Vertex> vertices = {
 };
 
 UniformBufferObject ubo{};
+
+std::vector<Quad>  quadVertices = {
+    {{-50.f, -50.f}, {1.0f, 0.0f}},
+    {{50.f, -50.f}, {0.0f, 1.0f}},
+    {{50.f, 50.f}, {0.0f, 0.0f}},
+    {{-50.f, 50.f}, {1.0f, 1.0f}}
+};
+
+std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};
 
 std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0, 4, 1, 0
@@ -82,6 +93,16 @@ private:
     VkBuffer uniformBuffers[MAX_FRAMES_IN_FLIGHT];
     VkDeviceMemory uniformBufferMemorys[MAX_FRAMES_IN_FLIGHT];
 
+    VkBuffer quadBuffer;
+    VkDeviceMemory quadBufferMemory;
+
+    
+    VkBuffer quadIndexBuffer;
+    VkDeviceMemory quadIndexBufferMemory;
+
+    std::vector<VkBuffer*> stagingBuffers;
+    std::vector<VkDeviceMemory*> stagingBufferMemorys;
+
     VkDescriptorSetLayout descriptorSetLayout;
     VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
     VkDescriptorPool descriptorPool;
@@ -119,11 +140,17 @@ private:
     void createSwapChain();
     void createImageViews();
     void createRenderPass();
-    void createGraphicsPipeline();
+    void createBasicGraphicsPipeline();
+    void createCircleGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
     void createVertexBuffers();
     void createIndexBuffers();
+    void createQuadBuffer();
+    void createQuadIndexBuffer();
+    void uploadBuffer(VkDeviceSize bufferSize, VkBuffer *buffer, void* bufferData);
+    void saveStagingBuffer(VkBuffer *buffer);
+    void saveStagingBufferMemorys(VkDeviceMemory *bufferMemory);
     void createDescriptorSetLayout();
     void createDescriptorPool();
     void createDescriptorSets();

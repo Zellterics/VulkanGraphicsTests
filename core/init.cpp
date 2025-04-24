@@ -1,7 +1,7 @@
 #pragma once
 #include "core.h"
 #include "swapChain.cpp"
-#include "initPipeline.cpp"
+#include "basicPipeline.cpp"
 #include "debugging.cpp"
 
 void ProtoThiApp::createInstance() {

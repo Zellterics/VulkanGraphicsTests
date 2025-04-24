@@ -24,46 +24,45 @@ void ProtoThiApp::createFramebuffers() {
     }
 }
 
+void ProtoThiApp::uploadBuffer(VkDeviceSize bufferSize, VkBuffer *buffer, void* bufferData){
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    void* data;
+    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, bufferData, (size_t) bufferSize);
+    vkUnmapMemory(device, stagingBufferMemory);        
+    copyBuffer(stagingBuffer, *buffer, bufferSize);
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+}
+
 void ProtoThiApp::createVertexBuffers() {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, vertices.data(), (size_t) bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
-
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffers[i], vertexBufferMemorys[i]);
-
-        copyBuffer(stagingBuffer, vertexBuffers[i], bufferSize);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        uploadBuffer(bufferSize, &vertexBuffers[i], vertices.data());
     }
 }
 
 void ProtoThiApp::createIndexBuffers() {
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, indices.data(), (size_t) bufferSize);
-        vkUnmapMemory(device, stagingBufferMemory);
-
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffers[i], indexBufferMemorys[i]);
-
-        copyBuffer(stagingBuffer, indexBuffers[i], bufferSize);
-
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        uploadBuffer(bufferSize, &indexBuffers[i], indices.data());
     }
+}
+
+void ProtoThiApp::createQuadBuffer(){
+    VkDeviceSize bufferSize = sizeof(quadVertices[0]) * quadVertices.size();
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, quadBuffer, quadBufferMemory);
+    uploadBuffer(bufferSize, &quadBuffer, quadVertices.data());
+}
+
+void ProtoThiApp::createQuadIndexBuffer(){
+    VkDeviceSize bufferSize = sizeof(quadIndices[0]) * quadIndices.size();
+    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, quadIndexBuffer, quadIndexBufferMemory);
+    uploadBuffer(bufferSize, &quadIndexBuffer, quadIndices.data());
 }
 
 void ProtoThiApp::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
