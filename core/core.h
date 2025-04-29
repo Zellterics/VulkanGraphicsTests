@@ -34,11 +34,11 @@ const uint32_t HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 3;
 
 std::vector<Vertex> vertices = {
-    {{-50.f, -50.f}, {1.0f, 0.0f, 0.0f}},
-    {{50.f, -50.f}, {0.0f, 1.0f, 0.0f}},
-    {{50.f, 50.f}, {0.0f, 0.0f, 1.0f}},
-    {{-50.f, 50.f}, {1.0f, 1.0f, 1.0f}},
-    {{100.f, -100.f}, {1.0f, 0.0f, 1.0f}}
+    {{1000.f, 1000.f}, {1.0f, 0.0f, 0.0f}},
+    {{1050.f, 1000.f}, {0.0f, 1.0f, 0.0f}},
+    {{1050.f, 1050.f}, {0.0f, 0.0f, 1.0f}},
+    {{1000.f, 1050.f}, {1.0f, 1.0f, 1.0f}},
+    {{1050.f, 950.f}, {1.0f, 0.0f, 1.0f}}
 };
 
 UniformBufferObject ubo{};
@@ -51,11 +51,7 @@ std::vector<Quad> quadVertices = {
 };
 
 std::vector<Circle> circleCenters = {
-    {{-50.f, -50.f},{25.f}, {1.0f, 0.0f, 0.0f}},
-    {{50.f, -50.f},{50.f}, {0.0f, 1.0f, 0.0f}},
-    {{50.f, 50.f},{20.f}, {0.0f, 0.0f, 1.0f}},
-    {{-50.f, 50.f},{30.f}, {1.0f, 1.0f, 1.0f}},
-    {{100.f, -100.f},{35.f}, {1.0f, 0.0f, 1.0f}}
+    {{-50.f, -50.f},{10.f}, {1.0f, 0.0f, 0.0f}}
 };
 
 std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};
@@ -137,6 +133,8 @@ private:
         app->framebufferResized = true;
     }
 
+    void update(float deltaTime);
+    void renderFrame();
     void updateVertexBuffers(uint32_t frameIndex);
     void updateIndexBuffers(uint32_t frameIndex);
     void updateUniformBuffers(uint32_t frameIndex);

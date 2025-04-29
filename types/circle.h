@@ -20,6 +20,10 @@ struct Circle {
         return bindingDescription;
     }
 
+    bool operator==(const Circle& a){
+        return this->pos == a.pos && this->color == a.color && this->size == a.size;
+    }
+
     static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
         std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
