@@ -49,10 +49,10 @@ void ProtoThiApp::mainLoop() {
     constexpr float delay = 1 / (float)FPS;
     FPSCounter fps;
     while (!glfwWindowShouldClose(window)) {
-        update(fps.getDeltaTime());
+        update(.016);
         renderFrame();
         
-        fps.delay(delay);
+        //fps.delay(delay);
         if(fps.frame()){
             std::cout << "\ncircles: " << circleCenters.size() << "  ";
         }
