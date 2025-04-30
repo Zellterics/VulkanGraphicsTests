@@ -49,7 +49,7 @@ void ProtoThiApp::mainLoop() {
     constexpr float delay = 1 / (float)FPS;
     FPSCounter fps;
     while (!glfwWindowShouldClose(window)) {
-        update(.016);
+        update(0.25);
         renderFrame();
         
         //fps.delay(delay);

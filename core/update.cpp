@@ -3,7 +3,7 @@
 
 void ProtoThiApp::update(float deltaTime){
     static std::vector<PhysicsObject> circlePhysics = {{{-50.f, -50.f},{-50.f, -50.f},{0,0}}};
-    glm::vec2 randomPos = {getRandomFloat(-300.0f,300.0f), getRandomFloat(-300.0f,-280.0f)};
+    glm::vec2 randomPos = {getRandomFloat(200.0f,300.0f), getRandomFloat(-300.0f,-280.0f)};
     circleCenters.push_back({randomPos,getRandomFloat(4.0f,8.0f), {getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f}});
     circlePhysics.push_back({randomPos, randomPos, {0.f,0.f}});
     const int steps = 2;
@@ -20,7 +20,58 @@ void ProtoThiApp::update(float deltaTime){
         std::vector<std::vector<std::vector<int>>> circleID((x + 7) / 8, std::vector<std::vector<int>>((y + 7) / 8));
 
         for(PhysicsObject& circle : circlePhysics){
-            circle.accelerate({0.f, .2f});
+            circle.accelerate({0.f, 1.f});
+        }
+
+    
+        for (int i = 0; i < circleAmount; i++){
+            int gridX = ((circleCenters[i].pos.x + x) / 2) / 8;
+            int gridY = ((circleCenters[i].pos.y + y) / 2) / 8;
+            if (gridX >= 0 && gridX < (x + 7) / 8 &&
+                gridY >= 0 && gridY < (y + 7) / 8) {
+                circleID[gridX][gridY].push_back(i);
+            }
+        }
+
+        int gridWidth = circleID.size();
+        int gridHeight = circleID[0].size();
+        
+        for (int x = 0; x < gridWidth; x++) {
+            for (int y = 0; y < gridHeight; y++) {
+                for (int ID : circleID[x][y]) {
+                    for (int j = 0; j <= 1; j++) {
+                        for (int k = -1; k <= 1; k++) {
+                            if(j == 0 && k==1)
+                                continue;
+                            int nx = x + j;
+                            int ny = y + k;
+        
+                            if (nx < 0 || ny < 0 || nx >= gridWidth || ny >= gridHeight)
+                                continue;
+        
+                            for (int neighbor : circleID[nx][ny]) {
+                                if (ID == neighbor) continue;
+        
+                                glm::vec2 collision = circlePhysics[ID].currentPos - circlePhysics[neighbor].currentPos;
+                                float dist = glm::length(collision);
+                                float summedSize = circleCenters[ID].size + circleCenters[neighbor].size;
+        
+                                if (dist < summedSize && dist > 0.001f) {
+                                    glm::vec2 n = collision / dist;
+                                    float delta = summedSize - dist;
+                                    circlePhysics[ID].currentPos += .4f * delta * n;
+                                    circlePhysics[neighbor].currentPos -= .4f * delta * n;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for(int i = 0; i < circleAmount; i++){
+            circlePhysics[i].updatePos(sub_dt);
+
+            circleCenters[i].pos = circlePhysics[i].currentPos;
         }
         for(int i = 0; i < circleAmount; i++){
             const glm::vec2 minBound{-x, -y};
@@ -43,50 +94,6 @@ void ProtoThiApp::update(float deltaTime){
                 circlePhysics[i].currentPos.y -= delta;
             };
         }
-    
-        for (int i = 0; i < circleAmount; i++){
-            int gridX = ((circleCenters[i].pos.x + x) / 2) / 8;
-            int gridY = ((circleCenters[i].pos.y + y) / 2) / 8;
-            if (gridX >= 0 && gridX < (x + 7) / 8 &&
-                gridY >= 0 && gridY < (y + 7) / 8) {
-                circleID[gridX][gridY].push_back(i);
-            }
-        }
-
-        int gridWidth = circleID.size();
-        int gridHeight = circleID[0].size(); // suponiendo rectangular
-        
-        for (int x = 0; x < gridWidth; x++) {
-            for (int y = 0; y < gridHeight; y++) {
-                for (int ID : circleID[x][y]) {
-                    for (int j = -1; j <= 1; j++) {
-                        for (int k = -1; k <= 1; k++) {
-                            int nx = x + j;
-                            int ny = y + k;
-        
-                            if (nx < 0 || ny < 0 || nx >= gridWidth || ny >= gridHeight)
-                                continue;
-        
-                            for (int neighbor : circleID[nx][ny]) {
-                                if (ID == neighbor) continue;
-        
-                                glm::vec2 collision = circlePhysics[ID].currentPos - circlePhysics[neighbor].currentPos;
-                                float dist = glm::length(collision);
-                                float summedSize = circleCenters[ID].size + circleCenters[neighbor].size;
-        
-                                if (dist < summedSize && dist > 0.0001f) {
-                                    glm::vec2 n = collision / dist;
-                                    float delta = summedSize - dist;
-                                    circlePhysics[ID].currentPos += 0.5f * delta * n;
-                                    circlePhysics[neighbor].currentPos -= 0.5f * delta * n;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         // for(int i = 0; i < circleAmount; i++){
         //     for(int j = i + 1; j < circleAmount; j++){
         //         glm::vec2 collision = circlePhysics[i].currentPos - circlePhysics[j].currentPos;
@@ -100,10 +107,10 @@ void ProtoThiApp::update(float deltaTime){
         //         }
         //     }
         // }
-        for(int i = 0; i < circleAmount; i++){
-            circlePhysics[i].updatePos(sub_dt);
+        // for(int i = 0; i < circleAmount; i++){
+        //     circlePhysics[i].updatePos(sub_dt);
 
-            circleCenters[i].pos = circlePhysics[i].currentPos;
-        }
+        //     circleCenters[i].pos = circlePhysics[i].currentPos;
+        // }
     }
 }
