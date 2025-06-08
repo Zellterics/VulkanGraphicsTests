@@ -51,7 +51,7 @@ std::vector<Quad> quadVertices = {
 };
 
 std::vector<Circle> circleCenters = {
-    {{-50.f, -50.f},{10.f}, {1.0f, 0.0f, 0.0f}}
+    {{-50.f, -50.f},{4.f}, {1.0f, 0.0f, 0.0f}}
 };
 
 std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};

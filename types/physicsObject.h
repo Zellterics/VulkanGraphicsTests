@@ -14,8 +14,9 @@ struct PhysicsObject{
     void updatePos(float dt){
         const glm::vec2 velocity = (currentPos - oldPos);
         oldPos = currentPos;
-        currentPos = currentPos + velocity + acceleration * dt * dt;
-        acceleration = {};
+        const float RESISTANCE = .3f;
+        currentPos = currentPos + velocity + (acceleration - velocity * RESISTANCE) * dt * dt;
+        acceleration = {0.0f, 0.0f};
     }
 
     void accelerate(glm::vec2 acc){
