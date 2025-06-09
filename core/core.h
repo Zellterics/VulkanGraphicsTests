@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -18,7 +19,7 @@
 #include <chrono>
 #include <thread>
 
-#include "handMade.h"
+#include "handMade.cpp"
 #include "vertex.h"
 #include "vulkanSupport.h"
 #include "uniformBufferObject.h"
@@ -185,10 +186,13 @@ private:
     bool checkValidationLayerSupport();
 
     static std::vector<char> readFile(const std::string& filename) {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+        std::string base = osd::getExecutableDir();
+        std::ifstream file(std::filesystem::path(base) / filename, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
+            #ifndef DEBUG
             throw std::runtime_error("failed to open file!");
+            #endif
         }
         size_t fileSize = (size_t) file.tellg();
         std::vector<char> buffer(fileSize);
@@ -202,8 +206,9 @@ private:
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+        #ifdef DEBUG
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
+        #endif
         return VK_FALSE;
     }
 };

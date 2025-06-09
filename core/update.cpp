@@ -13,23 +13,47 @@ void ProtoThiApp::update(float deltaTime){
     const int steps = 2;
     const float sub_dt = deltaTime / (float)steps;
     int x, y;
+    static bool changedResolution = false;
     glfwGetWindowSize(window, &x, &y);
     x /= 2;
     y /= 2;
     int circleAmount = circleCenters.size();
     int gridWidth = (x + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
     int gridHeight = (y + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
+    static std::vector<std::vector<int>> circleID(gridWidth * gridHeight);
+    // DEAR GOD I NEED TO CLEAN THIS CODE UP, BUT I NEED TO FINISH THIS SOON!!!!
+    static int saveX = x, saveY = y;//YEP I NEED MORE DESCRIPTIVE NAMES
+    static bool firstTime = true;
+    if(saveX != x || saveY != y){
+        changedResolution = true;
+    }
+    if(changedResolution){
+        circleID.clear();
+        circleID.resize(gridWidth * gridHeight);
+        changedResolution = false;
+        firstTime = true;
+    }
+    if (firstTime) {
+        for (std::vector<int> &reserveVector : circleID) {
+            reserveVector.reserve(8);
+        }
+        firstTime = false;
+    }
 
-    static unsigned const int NUM_THREADS = std::max(1u, std::thread::hardware_concurrency());
+    static unsigned const long long int NUM_THREADS = std::max(1u, std::thread::hardware_concurrency());
     for (int i = steps; i; i--){
         
-        std::vector<std::vector<std::vector<int>>> circleID(gridWidth, std::vector<std::vector<int>>(gridHeight));
+        
+        for (std::vector<int> &clearID : circleID){
+            clearID.clear();
+        }
         for (int i = 0; i < circleAmount; i++){
             int gridX = ((circleCenters[i].pos.x + x) / 2) / BIGGER_RADIUS;
             int gridY = ((circleCenters[i].pos.y + y) / 2) / BIGGER_RADIUS;
+            int index = (gridY * gridWidth) + gridX;
             if (gridX >= 0 && gridX < gridWidth &&
                 gridY >= 0 && gridY < gridHeight) {
-                circleID[gridX][gridY].push_back(i);
+                circleID[index].push_back(i);
             }
         }
 
@@ -39,7 +63,7 @@ void ProtoThiApp::update(float deltaTime){
         auto calculateCollissions = [&] (int start, int finish){
         for (int x = start; x < finish; x++) { // 20 veces extremadamente rapido
             for (int y = 0; y < gridHeight; y++) { // 20 veces extremadamente rapido
-                for (int ID : circleID[x][y]) {     // cantidad de objetos
+                for (int ID : circleID[(y * gridWidth) + x]) {     // cantidad de objetos
                     PhysicsObject &actualCirclePhysics = circlePhysics[ID];
                     Circle &actualCircleCenter = circleCenters[ID];
                     for (int j = 0; j <= 1; j++) {   //2 veces
@@ -52,7 +76,7 @@ void ProtoThiApp::update(float deltaTime){
                             if (nx < 0 || ny < 0 || nx >= finish || ny >= gridHeight)
                                 continue;
         
-                            for (int neighbor : circleID[nx][ny]) {
+                            for (int neighbor : circleID[(ny * gridWidth) + nx]) {
                                 if (ID == neighbor) continue;
                                 if(j == 0 && k == 0 && ID > neighbor) continue;
 

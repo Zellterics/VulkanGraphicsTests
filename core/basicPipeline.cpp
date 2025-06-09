@@ -3,8 +3,8 @@
 #include "initPipelineHelper.cpp"
 
 void ProtoThiApp::createBasicGraphicsPipeline() {
-    auto basicVertShaderCode = readFile("shaders/basicVert.spv");
-    auto basicFragShaderCode = readFile("shaders/basicFrag.spv");
+    auto basicVertShaderCode = readFile("../shaders/basicVert.spv");
+    auto basicFragShaderCode = readFile("../shaders/basicFrag.spv");
 
     VkShaderModule basicVertShaderModule = createShaderModule(basicVertShaderCode);
     VkShaderModule basicFragShaderModule = createShaderModule(basicFragShaderCode);
@@ -124,8 +124,8 @@ void ProtoThiApp::createBasicGraphicsPipeline() {
 
 
 void ProtoThiApp::createCircleGraphicsPipeline() {
-    auto circleVertShaderCode = readFile("shaders/circleVert.spv");
-    auto circleFragShaderCode = readFile("shaders/circleFrag.spv");
+    auto circleVertShaderCode = readFile("../shaders/circleVert.spv");
+    auto circleFragShaderCode = readFile("../shaders/circleFrag.spv");
 
     VkShaderModule circleVertShaderModule = createShaderModule(circleVertShaderCode);
     VkShaderModule circleFragShaderModule = createShaderModule(circleFragShaderCode);

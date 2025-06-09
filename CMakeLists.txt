@@ -11,6 +11,7 @@ endif()
 # Agregamos GLFW y GLM como subdirectorios
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
+add_compile_definitions(DEBUG=true)
 
 # Incluir headers
 include_directories(

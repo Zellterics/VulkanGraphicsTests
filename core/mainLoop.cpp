@@ -15,7 +15,9 @@ class FPSCounter {
         frameCount++;
 
         if (elapsedTime >= 1.0f) {
+            #ifdef DEBUG
             std::cout << "FPS: " << frameCount << std::endl;
+            #endif
             frameCount = 0;
             elapsedTime = 0.0f;
             return true;
@@ -54,7 +56,9 @@ void ProtoThiApp::mainLoop() {
         
         //fps.delay(delay);
         if(fps.frame()){
+            #ifdef DEBUG
             std::cout << "\ncircles: " << circleCenters.size() << "  ";
+            #endif
         }
     }
     vkDeviceWaitIdle(device);
