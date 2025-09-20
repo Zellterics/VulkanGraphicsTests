@@ -1,3 +1,6 @@
 /build
 /ThING.txt
 /.vscode
+/external/
+!/external/README.txt
+imgui.ini

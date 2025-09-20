@@ -16,6 +16,7 @@ add_compile_definitions(DEBUG=true)
 # Headers propios
 include_directories(
     external/glfw/include
+    external/imgui
     core
     complementary
     types
@@ -36,6 +37,12 @@ endif()
 # Ejecutable
 add_executable(${PROJECT_NAME} 
     main.cpp
+    external/imgui/imgui.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_widgets.cpp
+    external/imgui/imgui_tables.cpp
+    external/imgui/backends/imgui_impl_glfw.cpp
+    external/imgui/backends/imgui_impl_vulkan.cpp
 )
 
 # Linkeo

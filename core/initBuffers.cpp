@@ -179,9 +179,6 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
     renderPassInfo.pClearValues = &clearColor;
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        
-
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
@@ -231,6 +228,11 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
             vkCmdBindIndexBuffer(commandBuffer, ib, 0, VK_INDEX_TYPE_UINT16);
             vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(quadIndices.size()), circleCenters.size(), 0, 0, 0);
         }
+    
+        // -------- integración de ImGui --------
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
+
+        // -------- fin --------
     vkCmdEndRenderPass(commandBuffer);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {

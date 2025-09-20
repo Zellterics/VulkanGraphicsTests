@@ -35,7 +35,9 @@ class FPSCounter {
             while (duration_cast<duration<float>>(steady_clock::now() - frameStart).count() < targetFrameTime) {}
         }
     }
-    
+    int getFPS() const {
+        return (deltaTime > 0.0f) ? static_cast<int>(1.0f / deltaTime) : 0;
+    }
     float getDeltaTime() const {
         return deltaTime;
     }
@@ -52,8 +54,21 @@ void ProtoThiApp::mainLoop() {
     FPSCounter fps;
     while (!glfwWindowShouldClose(window)) {
         update(0.25);
-        renderFrame();
+        //FRAME INIT
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // UI
+        ImGui::Begin("Debug Window");
+        ImGui::Text("Vertices: %zu", circleCenters.size());
+        ImGui::Text("FPS: %d", fps.getFPS());
+        ImGui::End();
         
+
+        //RENDER
+        ImGui::Render();
+        renderFrame();
         //fps.delay(delay);
         if(fps.frame()){
             #ifdef DEBUG

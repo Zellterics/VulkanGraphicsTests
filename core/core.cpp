@@ -3,10 +3,12 @@
 #include "mainLoop.cpp"
 #include "init.cpp"
 #include "uniformBuffer.cpp"
+#include "imGui.cpp"
 
 void ProtoThiApp::run() {
     initWindow();
     initVulkan();
+    initImGui();
     mainLoop();
     cleanup();
 }
@@ -48,6 +50,11 @@ void ProtoThiApp::initVulkan() {
 }
 
 void ProtoThiApp::cleanup() {
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+
     cleanupSwapChain();
 
     vkDestroyRenderPass(device, renderPass, nullptr);

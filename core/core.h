@@ -27,6 +27,14 @@
 #include "quad.h"
 #include "circle.h"
 
+// Dear ImGui
+#include "imgui.h"
+#include "imgui_internal.h"
+
+// Backends (GLFW + Vulkan)
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
+
 constexpr int FPS = 60;
 
 const uint32_t WIDTH = 800;
@@ -126,6 +134,7 @@ private:
 
     void initWindow();
     void initVulkan();
+    void initImGui();
     void mainLoop();
     void cleanupSwapChain();
 
@@ -184,7 +193,10 @@ private:
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();
+    //imgui
 
+    VkCommandBuffer beginSingleTimeCommands();
+    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     static std::vector<char> readFile(const std::string& filename) {
         std::string base = osd::getExecutableDir();
         std::ifstream file(std::filesystem::path(base) / filename, std::ios::ate | std::ios::binary);
