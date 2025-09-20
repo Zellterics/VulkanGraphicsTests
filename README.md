@@ -15,5 +15,8 @@ every other dependency has it's folder named, just install from their specific g
 
 ## Platform
 WINDOWS
+Install Vulkan SDK
 
-I'm currently trying to run it on linux (it wasn't as easy as I tought either...).
+Linux 
+Install Vulkan SDK 
+Arch Example: sudo pacman -S vulkan-headers vulkan-icd-loader vulkan-tools
