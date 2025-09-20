@@ -8,6 +8,12 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+option(GLFW_BUILD_EXAMPLES OFF)
+option(GLFW_BUILD_TESTS OFF)
+option(GLFW_BUILD_DOCS OFF)
+option(GLFW_INSTALL OFF)
+option(GLFW_BUILD_SHARED_LIBS OFF)
+
 # Subdirectorios
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
@@ -53,6 +59,12 @@ add_executable(${PROJECT_NAME}
     external/imgui/imgui_tables.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_vulkan.cpp
+)
+
+target_link_options(${PROJECT_NAME} PRIVATE
+    -static
+    -static-libgcc
+    -static-libstdc++
 )
 
 # Linkeo

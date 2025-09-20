@@ -8,6 +8,48 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
+bool Slider2DFloat(const char* label,
+                   float* valueX, float* valueY,
+                   float minX, float maxX,
+                   float minY, float maxY,
+                   ImVec2 size = ImVec2(150,150))
+{
+    ImGuiIO& io = ImGui::GetIO();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    ImGui::InvisibleButton(label, size);
+    bool hovered = ImGui::IsItemHovered();
+    bool active = ImGui::IsItemActive();
+
+    float tX = (*valueX - minX) / (maxX - minX);
+    float tY = (*valueY - minY) / (maxY - minY);
+
+    if (active && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        ImVec2 mouse = io.MousePos;
+        tX = (mouse.x - p.x) / size.x;
+        tY = (mouse.y - p.y) / size.y;
+        tX = ImClamp(tX, 0.0f, 1.0f);
+        tY = ImClamp(tY, 0.0f, 1.0f);
+        *valueX = minX + tX * (maxX - minX);
+        *valueY = minY + tY * (maxY - minY);
+    }
+
+    draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), ImGui::GetColorU32(ImGuiCol_FrameBg), 4.0f);
+
+    draw_list->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), ImGui::GetColorU32(ImGuiCol_Border), 4.0f);
+
+    ImVec2 handle(p.x + tX * size.x, p.y + tY * size.y);
+    draw_list->AddCircleFilled(handle, 6.0f, ImGui::GetColorU32(hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button));
+
+    ImGui::SetCursorScreenPos(ImVec2(p.x, p.y + size.y + ImGui::GetStyle().ItemInnerSpacing.y));
+    ImGui::Text("%s", label);
+    ImGui::Text("(%.2f, %.2f)", *valueX, *valueY);
+
+    return active;
+}
+
+
 void ProtoThiApp::mainLoop() {
     constexpr float delay = 1 / (float)FPS;
     FPSCounter fps;
@@ -26,7 +68,7 @@ void ProtoThiApp::mainLoop() {
 
         // UI
         ImGui::SetNextWindowBgAlpha(0.f);
-        ImGuiID dockspaceID = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+        ImGuiID dockspaceID = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode | (ImGuiDockNodeFlags)ImGuiDockNodeFlags_NoTabBar);
         static bool first = true;
         if(first){
             first = false;
@@ -40,15 +82,27 @@ void ProtoThiApp::mainLoop() {
 
             ImGui::DockBuilderFinish(dockspaceID);
         }
-        ImGui::Begin("Debug Window", nullptr, ImGuiWindowFlags_NoMove);
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.WindowBorderSize = 0.0f;
+        style.Colors[ImGuiCol_DockingEmptyBg] = {1, 1, 1, 0};
+        style.Colors[ImGuiCol_WindowBg] = {.01, .01, .01, 1};
+        style.Colors[ImGuiCol_FrameBg] = {0, 0, 0, 1};
+        style.Colors[ImGuiCol_Border] = {1, 1, 1, 0};
+        style.WindowMinSize = ImVec2(200, 200);
+        ImGui::Begin("Debug Window", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar);
         ImVec2 dockedSize = ImGui::GetWindowSize();
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.f);
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabRounding, 12.f);
+        ImGui::PushItemWidth(100.f);
         ImGui::PushFont(monocraft);
-        ImGui::Text("Vertices: %zu", circleCenters.size());
+        ImGui::Text("Circles: %zu", circleCenters.size());
         ImGui::SliderInt("FPS: ", &speed, 10, 420);
         ImGui::SliderFloat("gravity: ", &gravity, -5.0f, 5.0f, "%.3f");
-        ImGui::SliderFloat2("spawnPoint", spawnPoint, -1.0f, 1.0f, "%.3f");
-        ImGui::SliderFloat("spawnRadius: ", &spawnRadius, 0.0f, 100.0f, "%.3f");
+        Slider2DFloat("Spawn Point", &spawnPoint[0], &spawnPoint[1], -1.0f, 1.0f, -1.0f, 1.0f);
+        ImGui::SliderFloat("spawnRad: ", &spawnRadius, 0.0f, 100.0f, "%.3f");
         ImGui::Text("Real FPS: %d", fps.getFPS());
+        ImGui::PopStyleVar(2);
+        ImGui::PopItemWidth();
         ImGui::PopFont();
         ImGui::End();
         
@@ -66,7 +120,7 @@ void ProtoThiApp::mainLoop() {
         update(0.25, gravity, dockedSize.x, spawnPoint, spawnRadius);
         ImGui::Render();
         renderFrame();
-        fps.delay(1 / (float)speed);
+        fps.delay(1 / (float)(speed + 1));
         if(fps.frame()){
             #ifdef DEBUG
             std::cout << "\ncircles: " << circleCenters.size() << "  ";

@@ -12,7 +12,7 @@ void ProtoThiApp::update(float deltaTime, float gravity, int dockedSize, float s
     static std::vector<PhysicsObject> circlePhysics = {{{-50.f, -50.f},{-50.f, -50.f},{0,0}}};
     glm::vec2 randomPos = {
         getRandomFloat((x - dockedSize / 2) * spawnPoint[0] + dockedSize / 2, ((x - dockedSize / 2 - spawnRadius) * spawnPoint[0]) + spawnRadius + dockedSize / 2), 
-        getRandomFloat(-y * spawnPoint[1], ((-y + spawnRadius) * spawnPoint[1]) - spawnRadius)};
+        getRandomFloat(y * spawnPoint[1], ((y - spawnRadius) * spawnPoint[1]) + spawnRadius)};
     const int BIGGER_RADIUS = 8;
     const int BIGGER_RADIUS_MINUS = BIGGER_RADIUS - 1;
     const int SMALLER_RADIUS = 4;

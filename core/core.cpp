@@ -81,10 +81,10 @@ void ProtoThiApp::initVulkan() {
 }
 
 void ProtoThiApp::cleanup() {
+    vkDeviceWaitIdle(device);
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
 
     cleanupSwapChain();
 

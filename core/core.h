@@ -26,8 +26,8 @@
 #include "circle.h"
 
 constexpr int FPS = 60;
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t WIDTH = 1200;
+const uint32_t HEIGHT = 800;
 const int MAX_FRAMES_IN_FLIGHT = 3;
 
 extern std::vector<Vertex> vertices;
