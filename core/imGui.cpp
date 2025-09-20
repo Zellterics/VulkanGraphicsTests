@@ -14,7 +14,7 @@ void ProtoThiApp::initImGui() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     // 2. Estilos
     ImGui::StyleColorsDark();
 
@@ -65,7 +65,6 @@ void ProtoThiApp::initImGui() {
         throw std::runtime_error("failed to init ImGui Vulkan backend!");
     }
 
-    // ---- Upload fonts ----
     VkCommandBuffer cmd = beginSingleTimeCommands();
     endSingleTimeCommands(cmd);
 }

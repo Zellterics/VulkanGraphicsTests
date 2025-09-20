@@ -1,10 +1,18 @@
 #include "core.h"
 #include "physicsObject.h"
 #include <thread>
+#include "imgui.h"
 
-void ProtoThiApp::update(float deltaTime){
+void ProtoThiApp::update(float deltaTime, float gravity, int dockedSize, float spawnPoint[2], float spawnRadius){
+    int x, y;
+    static bool changedResolution = false;
+    glfwGetWindowSize(window, &x, &y);
+    x /= 2;
+    y /= 2;
     static std::vector<PhysicsObject> circlePhysics = {{{-50.f, -50.f},{-50.f, -50.f},{0,0}}};
-    glm::vec2 randomPos = {getRandomFloat(100.0f,-100.0f), getRandomFloat(-300.0f,-280.0f)};
+    glm::vec2 randomPos = {
+        getRandomFloat((x - dockedSize / 2) * spawnPoint[0] + dockedSize / 2, ((x - dockedSize / 2 - spawnRadius) * spawnPoint[0]) + spawnRadius + dockedSize / 2), 
+        getRandomFloat(-y * spawnPoint[1], ((-y + spawnRadius) * spawnPoint[1]) - spawnRadius)};
     const int BIGGER_RADIUS = 8;
     const int BIGGER_RADIUS_MINUS = BIGGER_RADIUS - 1;
     const int SMALLER_RADIUS = 4;
@@ -12,11 +20,6 @@ void ProtoThiApp::update(float deltaTime){
     circlePhysics.push_back({randomPos, randomPos, {0.f,0.f}});
     const int steps = 2;
     const float sub_dt = deltaTime / (float)steps;
-    int x, y;
-    static bool changedResolution = false;
-    glfwGetWindowSize(window, &x, &y);
-    x /= 2;
-    y /= 2;
     int circleAmount = circleCenters.size();
     int gridWidth = (x + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
     int gridHeight = (y + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
@@ -58,7 +61,7 @@ void ProtoThiApp::update(float deltaTime){
         }
 
         for(PhysicsObject& circle : circlePhysics){
-            circle.accelerate({0.f, 1.f});
+            circle.accelerate({0.f, gravity});
         }
         auto calculateCollissions = [&] (int start, int finish){
         for (int x = start; x < finish; x++) { // 20 veces extremadamente rapido
@@ -126,25 +129,22 @@ void ProtoThiApp::update(float deltaTime){
             circleCenters[i].pos = circlePhysics[i].currentPos;
         }
         for(int i = 0; i < circleAmount; i++){
-            const glm::vec2 minBound{-x, -y};
-            const glm::vec2 maxBound{x, y};
-            
+            const glm::vec2 minBound{-x + dockedSize, -y};
+            const glm::vec2 maxBound{ x, y};
+
             if (circlePhysics[i].currentPos.x < minBound.x + circleCenters[i].size){ 
-                float delta = (minBound.x + circleCenters[i].size) - circlePhysics[i].currentPos.x;
-                circlePhysics[i].currentPos.x += delta;
+                circlePhysics[i].currentPos.x = minBound.x + circleCenters[i].size;
             }
             if (circlePhysics[i].currentPos.x > maxBound.x - circleCenters[i].size) {
-                float delta = circlePhysics[i].currentPos.x - (maxBound.x - circleCenters[i].size);
-                circlePhysics[i].currentPos.x -= delta;
-            };
+                circlePhysics[i].currentPos.x = maxBound.x - circleCenters[i].size;
+            }
             if (circlePhysics[i].currentPos.y < minBound.y + circleCenters[i].size) {
-                float delta = (minBound.y + circleCenters[i].size) - circlePhysics[i].currentPos.y;
-                circlePhysics[i].currentPos.y += delta;
-            };
+                circlePhysics[i].currentPos.y = minBound.y + circleCenters[i].size;
+            }
             if (circlePhysics[i].currentPos.y > maxBound.y - circleCenters[i].size) {
-                float delta = circlePhysics[i].currentPos.y - (maxBound.y - circleCenters[i].size);
-                circlePhysics[i].currentPos.y -= delta;
-            };
+                circlePhysics[i].currentPos.y = maxBound.y - circleCenters[i].size;
+            }
         }
+
     }
 }

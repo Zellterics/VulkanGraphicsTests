@@ -1,5 +1,5 @@
 #include "core.h"
-
+#include "fpsCounter.h"
 // Dear ImGui
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -8,73 +8,65 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
-class FPSCounter {
-    public:
-    bool frame() {
-        using namespace std::chrono;
-
-        auto now = steady_clock::now();
-        deltaTime = duration_cast<duration<float>>(now - frameStart).count();
-        elapsedTime += deltaTime;
-        frameStart = now;
-        frameCount++;
-
-        if (elapsedTime >= 1.0f) {
-            #ifdef DEBUG
-            std::cout << "FPS: " << frameCount << std::endl;
-            #endif
-            frameCount = 0;
-            elapsedTime = 0.0f;
-            return true;
-        }
-        return false;
-    }
-    void delay(float targetFrameTime) {
-        using namespace std::chrono;
-    
-        auto now = steady_clock::now();
-        float elapsed = duration_cast<duration<float>>(now - frameStart).count();
-        float remaining = targetFrameTime - elapsed;
-    
-        if (remaining > 0.0f) {
-            while (duration_cast<duration<float>>(steady_clock::now() - frameStart).count() < targetFrameTime) {}
-        }
-    }
-    int getFPS() const {
-        return (deltaTime > 0.0f) ? static_cast<int>(1.0f / deltaTime) : 0;
-    }
-    float getDeltaTime() const {
-        return deltaTime;
-    }
-    
-private:
-    float deltaTime = 0.0f;
-    std::chrono::steady_clock::time_point frameStart = std::chrono::steady_clock::now();
-    float elapsedTime = 0.0f;
-    int frameCount = 0;
-};
-
 void ProtoThiApp::mainLoop() {
     constexpr float delay = 1 / (float)FPS;
     FPSCounter fps;
+    int speed = FPS;
+    float gravity = 1.f;
+    float spawnPoint[2] = {0,0};
+    float spawnRadius = 10.f;
+    ImFont* monocraft = ImGui::GetIO().Fonts->AddFontFromFileTTF("Monocraft.ttf", 18.0f);
+    IM_ASSERT(monocraft && "Failed to load font!");
     while (!glfwWindowShouldClose(window)) {
-        update(0.25);
+        
         //FRAME INIT
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
         // UI
-        ImGui::Begin("Debug Window");
+        ImGui::SetNextWindowBgAlpha(0.f);
+        ImGuiID dockspaceID = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+        static bool first = true;
+        if(first){
+            first = false;
+            ImGui::DockBuilderRemoveNode(dockspaceID);
+            ImGui::DockBuilderAddNode(dockspaceID, ImGuiDockNodeFlags_CentralNode);
+            ImGui::DockBuilderSetNodeSize(dockspaceID, ImGui::GetMainViewport()->Size);
+
+            ImGuiID dock_id_left = 0, dock_id_right = 0;
+            ImGui::DockBuilderSplitNode(dockspaceID, ImGuiDir_Left, 0.25f, &dock_id_left, &dock_id_right);
+            ImGui::DockBuilderDockWindow("Debug Window", dock_id_left);
+
+            ImGui::DockBuilderFinish(dockspaceID);
+        }
+        ImGui::Begin("Debug Window", nullptr, ImGuiWindowFlags_NoMove);
+        ImVec2 dockedSize = ImGui::GetWindowSize();
+        ImGui::PushFont(monocraft);
         ImGui::Text("Vertices: %zu", circleCenters.size());
-        ImGui::Text("FPS: %d", fps.getFPS());
+        ImGui::SliderInt("FPS: ", &speed, 10, 420);
+        ImGui::SliderFloat("gravity: ", &gravity, -5.0f, 5.0f, "%.3f");
+        ImGui::SliderFloat2("spawnPoint", spawnPoint, -1.0f, 1.0f, "%.3f");
+        ImGui::SliderFloat("spawnRadius: ", &spawnRadius, 0.0f, 100.0f, "%.3f");
+        ImGui::Text("Real FPS: %d", fps.getFPS());
+        ImGui::PopFont();
         ImGui::End();
         
 
+        //ImGui window size
+        ImGuiDockNode* node = ImGui::DockBuilderGetNode(dockspaceID);
+
+        static int simWidth, simHeight;
+        if (node && node->CentralNode)
+        {
+            simWidth  = (int)node->CentralNode->Size.x;
+            simHeight = (int)node->CentralNode->Size.y;
+        }
         //RENDER
+        update(0.25, gravity, dockedSize.x, spawnPoint, spawnRadius);
         ImGui::Render();
         renderFrame();
-        //fps.delay(delay);
+        fps.delay(1 / (float)speed);
         if(fps.frame()){
             #ifdef DEBUG
             std::cout << "\ncircles: " << circleCenters.size() << "  ";
