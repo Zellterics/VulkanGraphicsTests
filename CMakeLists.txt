@@ -8,32 +8,39 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Agregamos GLFW y GLM como subdirectorios
+# Subdirectorios
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 add_compile_definitions(DEBUG=true)
 
-# Incluir headers
+# Headers propios
 include_directories(
     external/glfw/include
-    "$ENV{VULKAN_SDK}/Include"
     core
     complementary
     types
 )
 
-
-# Vincular directorios de librerías
-link_directories("$ENV{VULKAN_SDK}/Lib")
+# Vulkan según SO
+if(WIN32)
+    message(STATUS "Configurando Vulkan para Windows (LunarG SDK)")
+    include_directories("$ENV{VULKAN_SDK}/Include")
+    link_directories("$ENV{VULKAN_SDK}/Lib")
+    set(VULKAN_LIB vulkan-1)
+else()
+    message(STATUS "Configurando Vulkan para Linux (pacman)")
+    find_package(Vulkan REQUIRED)
+    set(VULKAN_LIB Vulkan::Vulkan)
+endif()
 
 # Ejecutable
 add_executable(${PROJECT_NAME} 
-main.cpp
+    main.cpp
 )
 
 # Linkeo
 target_link_libraries(${PROJECT_NAME}
     glfw
-    vulkan-1
     glm
+    ${VULKAN_LIB}
 )
