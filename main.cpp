@@ -1,4 +1,4 @@
-#include "core.cpp"
+#include "core.h"
 
 int main() {
     ProtoThiApp app;

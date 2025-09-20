@@ -1,4 +1,3 @@
-#pragma once
 #include "core.h"
 
 void ProtoThiApp::saveStagingBuffer(VkBuffer *buffer){

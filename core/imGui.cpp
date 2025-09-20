@@ -1,4 +1,13 @@
 #include "core.h"
+#include "vulkanSupport.h"
+
+// Dear ImGui
+#include "imgui.h"
+#include "imgui_internal.h"
+
+// Backends (GLFW + Vulkan)
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
 
 void ProtoThiApp::initImGui() {
     // 1. Crear contexto
@@ -42,7 +51,7 @@ void ProtoThiApp::initImGui() {
     init_info.Instance = instance;
     init_info.PhysicalDevice = physicalDevice;
     init_info.Device = device;
-    init_info.QueueFamily = findQueueFamilies(physicalDevice).graphicsFamily.value();
+    init_info.QueueFamily = findQueueFamilies(physicalDevice, surface).graphicsFamily.value();
     init_info.Queue = graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = descriptorPool;

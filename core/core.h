@@ -19,56 +19,31 @@
 #include <chrono>
 #include <thread>
 
-#include "handMade.cpp"
+#include "handMade.h"
 #include "vertex.h"
-#include "vulkanSupport.h"
 #include "uniformBufferObject.h"
 
 #include "quad.h"
 #include "circle.h"
 
-// Dear ImGui
-#include "imgui.h"
-#include "imgui_internal.h"
-
-// Backends (GLFW + Vulkan)
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_vulkan.h"
-
 constexpr int FPS = 60;
-
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
-
 const int MAX_FRAMES_IN_FLIGHT = 3;
 
-std::vector<Vertex> vertices = {
-    {{1000.f, 1000.f}, {1.0f, 0.0f, 0.0f}},
-    {{1050.f, 1000.f}, {0.0f, 1.0f, 0.0f}},
-    {{1050.f, 1050.f}, {0.0f, 0.0f, 1.0f}},
-    {{1000.f, 1050.f}, {1.0f, 1.0f, 1.0f}},
-    {{1050.f, 950.f}, {1.0f, 0.0f, 1.0f}}
-};
+extern std::vector<Vertex> vertices;
 
-UniformBufferObject ubo{};
+extern UniformBufferObject ubo;
 
-std::vector<Quad> quadVertices = {
-    {{-1.f, -1.f}, {-1.0f, -1.0f}},
-    {{1.f, -1.f}, {1.0f, -1.0f}},
-    {{1.f, 1.f}, {1.0f, 1.0f}},
-    {{-1.f, 1.f}, {-1.0f, 1.0f}}
-};
+extern std::vector<Quad> quadVertices;
 
-std::vector<Circle> circleCenters = {
-    {{-50.f, -50.f},{4.f}, {1.0f, 0.0f, 0.0f}}
-};
+extern std::vector<Circle> circleCenters;
 
-std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};
+extern std::vector<uint16_t> quadIndices;
 
-std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0, 4, 1, 0
-};
+extern std::vector<uint16_t> indices;
 //---------------------------------------------------------------------------------------
+//
 class ProtoThiApp {
 public:
     void run();
@@ -187,10 +162,8 @@ private:
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
     bool isDeviceSuitable(VkPhysicalDevice device);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();
     //imgui

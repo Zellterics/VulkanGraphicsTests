@@ -34,9 +34,19 @@ else()
     set(VULKAN_LIB Vulkan::Vulkan)
 endif()
 
+file(GLOB CORE_SOURCES
+    core/*.cpp
+)
+
+file(GLOB COMPLEMENTARY_SOURCES
+    complementary/*.cpp
+)
+
 # Ejecutable
 add_executable(${PROJECT_NAME} 
     main.cpp
+    ${CORE_SOURCES}
+    ${COMPLEMENTARY_SOURCES}
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
     external/imgui/imgui_widgets.cpp

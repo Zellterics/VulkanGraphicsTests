@@ -1,6 +1,4 @@
-#pragma once
 #include "core.h"
-#include "initPipelineHelper.cpp"
 
 void ProtoThiApp::createBasicGraphicsPipeline() {
     auto basicVertShaderCode = readFile("../shaders/basicVert.spv");

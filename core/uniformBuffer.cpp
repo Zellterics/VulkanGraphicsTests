@@ -1,4 +1,3 @@
-#pragma once
 #include "core.h"
 #include <glm/gtc/matrix_transform.hpp>
 

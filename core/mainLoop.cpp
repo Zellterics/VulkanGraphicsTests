@@ -1,7 +1,12 @@
-#pragma once
 #include "core.h"
-#include "updateBuffers.cpp"
-#include "update.cpp"
+
+// Dear ImGui
+#include "imgui.h"
+#include "imgui_internal.h"
+
+// Backends (GLFW + Vulkan)
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
 
 class FPSCounter {
     public:

@@ -1,9 +1,40 @@
-#pragma once
 #include "core.h"
-#include "mainLoop.cpp"
-#include "init.cpp"
-#include "uniformBuffer.cpp"
-#include "imGui.cpp"
+#include "vulkanSupport.h"
+
+// Dear ImGui
+#include "imgui.h"
+#include "imgui_internal.h"
+
+// Backends (GLFW + Vulkan)
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
+
+std::vector<Vertex> vertices = {
+    {{1000.f, 1000.f}, {1.0f, 0.0f, 0.0f}},
+    {{1050.f, 1000.f}, {0.0f, 1.0f, 0.0f}},
+    {{1050.f, 1050.f}, {0.0f, 0.0f, 1.0f}},
+    {{1000.f, 1050.f}, {1.0f, 1.0f, 1.0f}},
+    {{1050.f, 950.f}, {1.0f, 0.0f, 1.0f}}
+};
+
+UniformBufferObject ubo{};
+
+std::vector<Quad> quadVertices = {
+    {{-1.f, -1.f}, {-1.0f, -1.0f}},
+    {{1.f, -1.f}, {1.0f, -1.0f}},
+    {{1.f, 1.f}, {1.0f, 1.0f}},
+    {{-1.f, 1.f}, {-1.0f, 1.0f}}
+};
+
+std::vector<Circle> circleCenters = {
+    {{-50.f, -50.f},{4.f}, {1.0f, 0.0f, 0.0f}}
+};
+
+std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};
+
+std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0, 4, 1, 0
+};
 
 void ProtoThiApp::run() {
     initWindow();

@@ -1,5 +1,12 @@
-#pragma once
 #include "core.h"
+
+// Dear ImGui
+#include "imgui.h"
+#include "imgui_internal.h"
+
+// Backends (GLFW + Vulkan)
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
 
 void ProtoThiApp::createFramebuffers() {
     swapChainFramebuffers.resize(swapChainImageViews.size());
