@@ -7,16 +7,10 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
-#include <stdexcept>
-#include <algorithm>
 #include <vector>
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
-#include <limits>
-#include <array>
-#include <set>
-#include <thread>
 
 #include "handMade.h"
 #include "vertex.h"
@@ -117,7 +111,7 @@ private:
         app->framebufferResized = true;
     }
 
-    void update(float deltaTime, float gravity, int dockedSize, float spawnPoint[2], float spawnRadius);
+    void update(float deltaTime, float gravity[2], int dockedSize, float spawnPoint[2], float spawnRadius);
     void renderFrame();
     void updateVertexBuffers(uint32_t frameIndex);
     void updateIndexBuffers(uint32_t frameIndex);

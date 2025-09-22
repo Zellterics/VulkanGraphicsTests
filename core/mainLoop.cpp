@@ -54,10 +54,10 @@ void ProtoThiApp::mainLoop() {
     constexpr float delay = 1 / (float)FPS;
     FPSCounter fps;
     int speed = FPS;
-    float gravity = 1.f;
+    float gravity[2] = {0.f, 1.f};
     float spawnPoint[2] = {0,0};
     float spawnRadius = 10.f;
-    ImFont* monocraft = ImGui::GetIO().Fonts->AddFontFromFileTTF("Monocraft.ttf", 18.0f);
+    ImFont* monocraft = ImGui::GetIO().Fonts->AddFontFromFileTTF("../external/Monocraft.ttf", 18.0f);
     IM_ASSERT(monocraft && "Failed to load font!");
     while (!glfwWindowShouldClose(window)) {
         
@@ -82,6 +82,7 @@ void ProtoThiApp::mainLoop() {
 
             ImGui::DockBuilderFinish(dockspaceID);
         }
+        
         ImGuiStyle& style = ImGui::GetStyle();
         style.WindowBorderSize = 0.0f;
         style.Colors[ImGuiCol_DockingEmptyBg] = {1, 1, 1, 0};
@@ -97,8 +98,8 @@ void ProtoThiApp::mainLoop() {
         ImGui::PushFont(monocraft);
         ImGui::Text("Circles: %zu", circleCenters.size());
         ImGui::SliderInt("FPS: ", &speed, 10, 420);
-        ImGui::SliderFloat("gravity: ", &gravity, -5.0f, 5.0f, "%.3f");
         Slider2DFloat("Spawn Point", &spawnPoint[0], &spawnPoint[1], -1.0f, 1.0f, -1.0f, 1.0f);
+        Slider2DFloat("Gravity", &gravity[0], &gravity[1], -5.0f, 5.0f, -5.0f, 5.0f);
         ImGui::SliderFloat("spawnRad: ", &spawnRadius, 0.0f, 100.0f, "%.3f");
         ImGui::Text("Real FPS: %d", fps.getFPS());
         ImGui::PopStyleVar(2);

@@ -1,6 +1,8 @@
 #include "core.h"
 #include "vulkanSupport.h"
 
+#include <set>
+
 void ProtoThiApp::createInstance() {
     if (enableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested, but not available!");

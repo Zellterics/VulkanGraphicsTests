@@ -1,9 +1,8 @@
 #include "core.h"
 #include "physicsObject.h"
 #include <thread>
-#include "imgui.h"
 
-void ProtoThiApp::update(float deltaTime, float gravity, int dockedSize, float spawnPoint[2], float spawnRadius){
+void ProtoThiApp::update(float deltaTime, float gravity[2], int dockedSize, float spawnPoint[2], float spawnRadius){
     int x, y;
     static bool changedResolution = false;
     glfwGetWindowSize(window, &x, &y);
@@ -11,7 +10,7 @@ void ProtoThiApp::update(float deltaTime, float gravity, int dockedSize, float s
     y /= 2;
     static std::vector<PhysicsObject> circlePhysics = {{{-50.f, -50.f},{-50.f, -50.f},{0,0}}};
     glm::vec2 randomPos = {
-        getRandomFloat((x - dockedSize / 2) * spawnPoint[0] + dockedSize / 2, ((x - dockedSize / 2 - spawnRadius) * spawnPoint[0]) + spawnRadius + dockedSize / 2), 
+        getRandomFloat((x - dockedSize / 2.f) * spawnPoint[0] + dockedSize / 2.f, ((x - dockedSize / 2.f - spawnRadius) * spawnPoint[0]) + spawnRadius + dockedSize / 2.f), 
         getRandomFloat(y * spawnPoint[1], ((y - spawnRadius) * spawnPoint[1]) + spawnRadius)};
     const int BIGGER_RADIUS = 8;
     const int BIGGER_RADIUS_MINUS = BIGGER_RADIUS - 1;
@@ -61,7 +60,7 @@ void ProtoThiApp::update(float deltaTime, float gravity, int dockedSize, float s
         }
 
         for(PhysicsObject& circle : circlePhysics){
-            circle.accelerate({0.f, gravity});
+            circle.accelerate({gravity[0], gravity[1]});
         }
         auto calculateCollissions = [&] (int start, int finish){
         for (int x = start; x < finish; x++) { // 20 veces extremadamente rapido

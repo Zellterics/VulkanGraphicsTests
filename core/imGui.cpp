@@ -3,7 +3,6 @@
 
 // Dear ImGui
 #include "imgui.h"
-#include "imgui_internal.h"
 
 // Backends (GLFW + Vulkan)
 #include "backends/imgui_impl_glfw.h"

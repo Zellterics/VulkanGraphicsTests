@@ -3,7 +3,6 @@
 
 // Dear ImGui
 #include "imgui.h"
-#include "imgui_internal.h"
 
 // Backends (GLFW + Vulkan)
 #include "backends/imgui_impl_glfw.h"
@@ -27,7 +26,7 @@ std::vector<Quad> quadVertices = {
 };
 
 std::vector<Circle> circleCenters = {
-    {{-50.f, -50.f},{4.f}, {1.0f, 0.0f, 0.0f}}
+    {{-50.f, -50.f},4.f, {1.0f, 0.0f, 0.0f}}
 };
 
 std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};
@@ -88,6 +87,14 @@ void ProtoThiApp::cleanup() {
 
     cleanupSwapChain();
 
+    for(int i = 0; i < 2; i++){
+        vkDestroyPipeline(device, graphicsPipelines[i], nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayouts[i], nullptr);
+    }
+    
+    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+
     vkDestroyRenderPass(device, renderPass, nullptr);
     vkDestroyBuffer(device, quadBuffer, nullptr);
     vkFreeMemory(device, quadBufferMemory, nullptr);
@@ -117,10 +124,6 @@ void ProtoThiApp::cleanup() {
     //     vkDestroyPipelineLayout(device, pipelineLayouts.back(), nullptr);
     //     pipelineLayouts.pop_back();
     // }
-    for(int i = 0; i < 2; i++){
-        vkDestroyPipeline(device, graphicsPipelines[i], nullptr);
-        vkDestroyPipelineLayout(device, pipelineLayouts[i], nullptr);
-    }
     
 
 
@@ -134,8 +137,7 @@ void ProtoThiApp::cleanup() {
         stagingBufferMemorys.pop_back();
     }
 
-    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
+    
 
     vkDestroyCommandPool(device, commandPool, nullptr);
 
