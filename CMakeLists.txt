@@ -61,15 +61,32 @@ add_executable(${PROJECT_NAME}
     external/imgui/backends/imgui_impl_vulkan.cpp
 )
 
-target_link_options(${PROJECT_NAME} PRIVATE
-    -static
-    -static-libgcc
-    -static-libstdc++
-)
+if(MINGW OR WIN32)
+    target_link_options(${PROJECT_NAME} PRIVATE
+        -static
+        -static-libgcc
+        -static-libstdc++
+    )
+else()
+    target_link_options(${PROJECT_NAME} PRIVATE
+        # -static A LINUX NO LE GUSTA ESTO
+        -static-libgcc
+        -static-libstdc++
+    )
+endif()
 
 # Linkeo
-target_link_libraries(${PROJECT_NAME}
-    glfw
-    glm
-    ${VULKAN_LIB}
-)
+if(MINGW OR WIN32)
+    target_link_libraries(${PROJECT_NAME}
+        glfw
+        glm
+        ${VULKAN_LIB}
+    )
+else()
+    target_link_libraries(${PROJECT_NAME}
+        glfw
+        X11
+        glm
+        ${VULKAN_LIB}
+    )
+endif()
