@@ -2,10 +2,8 @@
 
 // Dear ImGui
 #include "imgui.h"
-#include "imgui_internal.h"
 
 // Backends (GLFW + Vulkan)
-#include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
 void ProtoThiApp::createFramebuffers() {
@@ -222,7 +220,7 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
             vkCmdBindDescriptorSets(
                 commandBuffer,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipelineLayouts[0],
+                pipelineLayouts[1],
                 0, 1, &descriptorSets[currentFrame],
                 0, nullptr
             );

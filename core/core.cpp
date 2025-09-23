@@ -8,32 +8,37 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
-std::vector<Vertex> vertices = {
-    {{1000.f, 1000.f}, {1.0f, 0.0f, 0.0f}},
-    {{1050.f, 1000.f}, {0.0f, 1.0f, 0.0f}},
-    {{1050.f, 1050.f}, {0.0f, 0.0f, 1.0f}},
-    {{1000.f, 1050.f}, {1.0f, 1.0f, 1.0f}},
-    {{1050.f, 950.f}, {1.0f, 0.0f, 1.0f}}
-};
+ProtoThiApp::ProtoThiApp(){
+    vertices = {
+        {{1000.f, 1000.f}, {1.0f, 0.0f, 0.0f}},
+        {{1050.f, 1000.f}, {0.0f, 1.0f, 0.0f}},
+        {{1050.f, 1050.f}, {0.0f, 0.0f, 1.0f}},
+        {{1000.f, 1050.f}, {1.0f, 1.0f, 1.0f}},
+        {{1050.f, 950.f}, {1.0f, 0.0f, 1.0f}}
+    };
 
-UniformBufferObject ubo{};
+    ubo = {};
 
-std::vector<Quad> quadVertices = {
-    {{-1.f, -1.f}, {-1.0f, -1.0f}},
-    {{1.f, -1.f}, {1.0f, -1.0f}},
-    {{1.f, 1.f}, {1.0f, 1.0f}},
-    {{-1.f, 1.f}, {-1.0f, 1.0f}}
-};
+    quadVertices = {
+        {{-1.f, -1.f}, {-1.0f, -1.0f}},
+        {{1.f, -1.f}, {1.0f, -1.0f}},
+        {{1.f, 1.f}, {1.0f, 1.0f}},
+        {{-1.f, 1.f}, {-1.0f, 1.0f}}
+    };
 
-std::vector<Circle> circleCenters = {
-    {{-50.f, -50.f},4.f, {1.0f, 0.0f, 0.0f}}
-};
+    circleCenters = {
+        {{-50.f, -50.f},4.f, {1.0f, 0.0f, 0.0f}}
+    };
 
-std::vector<uint16_t> quadIndices = {0,1,2,2,3,0};
+    quadIndices = {0,1,2,2,3,0};
 
-std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0, 4, 1, 0
-};
+    indices = {
+        0, 1, 2, 2, 3, 0, 4, 1, 0
+    };
+
+    updateCallback = nullptr;
+    UICallback = nullptr;
+}
 
 void ProtoThiApp::run() {
     initWindow();
@@ -41,6 +46,16 @@ void ProtoThiApp::run() {
     initImGui();
     mainLoop();
     cleanup();
+}
+
+bool ProtoThiApp::setUpdateCallback(std::function<void(ProtoThiApp&, FPSCounter&)> updateCb){
+    updateCallback = updateCb;
+    return static_cast<bool>(updateCallback);
+}
+
+bool ProtoThiApp::setUICallback(std::function<void(ProtoThiApp&, FPSCounter&)> UICb){
+    UICallback = UICb;
+    return static_cast<bool>(updateCallback);
 }
 
 void ProtoThiApp::initWindow() {
@@ -185,7 +200,7 @@ void ProtoThiApp::drawFrame() {
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
 
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[imageIndex]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 

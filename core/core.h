@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -19,27 +20,28 @@
 #include "quad.h"
 #include "circle.h"
 
+#include "fpsCounter.h"
 constexpr int FPS = 60;
 const uint32_t WIDTH = 1200;
 const uint32_t HEIGHT = 800;
 const int MAX_FRAMES_IN_FLIGHT = 3;
 
-extern std::vector<Vertex> vertices;
-
-extern UniformBufferObject ubo;
-
-extern std::vector<Quad> quadVertices;
-
-extern std::vector<Circle> circleCenters;
-
-extern std::vector<uint16_t> quadIndices;
-
-extern std::vector<uint16_t> indices;
 //---------------------------------------------------------------------------------------
 //
 class ProtoThiApp {
 public:
+    //SETUP
+    ProtoThiApp();
     void run();
+    bool setUpdateCallback(std::function<void(ProtoThiApp&, FPSCounter&)>);
+    bool setUICallback(std::function<void(ProtoThiApp&, FPSCounter&)>);
+
+    //HOOKS
+    int getCircleAmount();
+    void getWindowSize(int* x, int* y);
+    void addCircle(glm::vec2 pos, float radius, glm::vec3 color);
+    std::vector<Circle>* getCircleDrawVector();
+    
 private:
     GLFWwindow* window;
 
@@ -96,7 +98,18 @@ private:
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
+    std::vector<VkFence> imagesInFlight;
     uint32_t currentFrame = 0;
+
+    std::function<void(ProtoThiApp&, FPSCounter&)> updateCallback;
+    std::function<void(ProtoThiApp&, FPSCounter&)> UICallback;
+
+    std::vector<Vertex> vertices;
+    UniformBufferObject ubo;
+    std::vector<Quad> quadVertices;
+    std::vector<Circle> circleCenters;
+    std::vector<uint16_t> quadIndices;
+    std::vector<uint16_t> indices;
 
     bool framebufferResized = false;
 

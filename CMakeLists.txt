@@ -26,6 +26,9 @@ include_directories(
     core
     complementary
     types
+    app
+    app/UI
+    app/update
 )
 
 # Vulkan según SO
@@ -40,6 +43,10 @@ else()
     set(VULKAN_LIB Vulkan::Vulkan)
 endif()
 
+file(GLOB_RECURSE APP_SOURCES
+    app/*.cpp
+)
+
 file(GLOB CORE_SOURCES
     core/*.cpp
 )
@@ -53,6 +60,7 @@ add_executable(${PROJECT_NAME}
     main.cpp
     ${CORE_SOURCES}
     ${COMPLEMENTARY_SOURCES}
+    ${APP_SOURCES}
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
     external/imgui/imgui_widgets.cpp
