@@ -31,6 +31,7 @@ void ProtoThiApp::mainLoop() {
 
 void ProtoThiApp::renderFrame(){
     // FOR OPTIMIZATION PROPOSES YOU CAN USE A DIRTY FLAG TO UPDATE ONLY WHEN CHANGES WHERE SUBMITED, NOT REALLY NECESSARYT WITH THE ACTUAL APPROACH
+    updateUniformBuffers(currentFrame);
     updateIndexBuffers(currentFrame);
     updateVertexBuffers(currentFrame);
     updateCircleBuffers(currentFrame);
