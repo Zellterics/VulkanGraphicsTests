@@ -1,7 +1,7 @@
 /build
 /ThING.txt
 /.vscode
-/external/
+/external/*
 !/external/README.txt
 !/external/Monocraft.ttf
 imgui.ini

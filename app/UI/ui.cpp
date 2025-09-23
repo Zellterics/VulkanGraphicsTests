@@ -5,6 +5,7 @@
 #include "imGuiCustom.h"
 
 void UI(ProtoThiApp& hooks, FPSCounter& fps){
+    ImGui::GetIO().IniFilename = nullptr;
     ImGui::SetNextWindowBgAlpha(0.f);
     ImGuiID dockspaceID = ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode | (ImGuiDockNodeFlags)ImGuiDockNodeFlags_NoTabBar);
     static bool first = true;
