@@ -18,19 +18,20 @@ void ProtoThiApp::updateUniformBuffers(uint32_t frameIndex){
     static float height = 0;
 
 
-    if(width != (float) swapChainExtent.width || height != (float) swapChainExtent.height){
+    if(width != (float) swapChainExtent.width || height != (float) swapChainExtent.height || updateUBOFlag){
         width = (float) swapChainExtent.width;
         height = (float) swapChainExtent.height;
-        float halfWidth = width / 2.0f;
-        float halfHeight = height / 2.0f;
+        float halfWidth = (width / 2.0f) / zoom;
+        float halfHeight = (height / 2.0f) / zoom;
         ubo.projection = glm::ortho(
-            -halfWidth, halfWidth,
-            -halfHeight, halfHeight,
+            -halfWidth + offset.x, halfWidth + offset.x,
+            -halfHeight + offset.y, halfHeight + offset.y,
             -1.0f, 1.0f
         );
     }
-    if(!mappedData[frameIndex]){
+    if(!mappedData[frameIndex] || updateUBOFlag){
         vkMapMemory(device, uniformBufferMemorys[frameIndex], 0, bufferSize, 0, &mappedData[frameIndex]);
+        updateUBOFlag = false;
     }
     
     memcpy(mappedData[frameIndex], &ubo, (size_t) bufferSize);

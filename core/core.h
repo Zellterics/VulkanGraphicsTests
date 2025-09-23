@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/fwd.hpp"
 #include <functional>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -41,6 +42,7 @@ public:
     void getWindowSize(int* x, int* y);
     void addCircle(glm::vec2 pos, float radius, glm::vec3 color);
     std::vector<Circle>* getCircleDrawVector();
+    void setZoomAndOffset(float zoom, glm::vec2 offset);
     
 private:
     GLFWwindow* window;
@@ -111,7 +113,11 @@ private:
     std::vector<uint16_t> quadIndices;
     std::vector<uint16_t> indices;
 
-    bool framebufferResized = false;
+    // Hooks Variables
+    float zoom;
+    glm::vec2 offset;
+    bool updateUBOFlag;
+    bool framebufferResized;
 
     void initWindow();
     void initVulkan();
@@ -172,8 +178,6 @@ private:
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();
-    //imgui
-
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
     static std::vector<char> readFile(const std::string& filename) {

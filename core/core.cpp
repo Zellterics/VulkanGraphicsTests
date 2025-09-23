@@ -9,6 +9,10 @@
 #include "backends/imgui_impl_vulkan.h"
 
 ProtoThiApp::ProtoThiApp(){
+    zoom = 1;
+    offset = {100, 100};
+    bool updateUBOFlag = true;
+    bool framebufferResized = false;
     vertices = {
         {{1000.f, 1000.f}, {1.0f, 0.0f, 0.0f}},
         {{1050.f, 1000.f}, {0.0f, 1.0f, 0.0f}},

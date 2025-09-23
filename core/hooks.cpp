@@ -18,3 +18,9 @@ void ProtoThiApp::addCircle(glm::vec2 pos, float size, glm::vec3 color){
 std::vector<Circle>* ProtoThiApp::getCircleDrawVector(){
     return &circleCenters;
 }
+
+void ProtoThiApp::setZoomAndOffset(float zoom, glm::vec2 offset){
+    this->zoom = zoom;
+    this->offset = offset;
+    updateUBOFlag = true;
+}

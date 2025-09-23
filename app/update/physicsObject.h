@@ -4,7 +4,6 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
-#include <array>
 
 struct PhysicsObject{
     glm::vec2 currentPos;
