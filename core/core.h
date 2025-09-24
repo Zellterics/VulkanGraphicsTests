@@ -20,6 +20,7 @@
 
 #include "quad.h"
 #include "circle.h"
+#include "polygon.h"
 
 #include "fpsCounter.h"
 constexpr int FPS = 60;
@@ -37,13 +38,18 @@ public:
     bool setUpdateCallback(std::function<void(ProtoThiApp&, FPSCounter&)>);
     bool setUICallback(std::function<void(ProtoThiApp&, FPSCounter&)>);
 
-    //HOOKS
+    //API
     int getCircleAmount();
     void getWindowSize(int* x, int* y);
     void addCircle(glm::vec2 pos, float radius, glm::vec3 color);
     std::vector<Circle>* getCircleDrawVector();
     void setZoomAndOffset(float zoom, glm::vec2 offset);
-    
+    void setBackgroundColor(glm::vec4 color);
+    glm::mat4 build2DTransform(glm::vec2 pos, float rotation, glm::vec2 scale);
+    void setRotation(glm::vec2 pos, float rotation, glm::vec2 scale);
+    std::string makeUniqueId(std::string baseId);
+    void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>& ver, std::vector<uint16_t>& ind);
+    void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>&& ver, std::vector<uint16_t>&& ind);
 private:
     GLFWwindow* window;
 
@@ -118,6 +124,8 @@ private:
     glm::vec2 offset;
     bool updateUBOFlag;
     bool framebufferResized;
+    VkClearValue clearColor;
+    std::vector<Polygon> polygons;
 
     void initWindow();
     void initVulkan();
@@ -129,8 +137,6 @@ private:
         auto app = reinterpret_cast<ProtoThiApp*>(glfwGetWindowUserPointer(window));
         app->framebufferResized = true;
     }
-
-    void update(float deltaTime, float gravity[2], int dockedSize, float spawnPoint[2], float spawnRadius);
     void renderFrame();
     void updateVertexBuffers(uint32_t frameIndex);
     void updateIndexBuffers(uint32_t frameIndex);

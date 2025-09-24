@@ -21,6 +21,9 @@ void ProtoThiApp::updateUniformBuffers(uint32_t frameIndex){
     if(width != (float) swapChainExtent.width || height != (float) swapChainExtent.height || updateUBOFlag){
         width = (float) swapChainExtent.width;
         height = (float) swapChainExtent.height;
+        if(zoom == 0){
+            zoom = .001;
+        }
         float halfWidth = (width / 2.0f) / zoom;
         float halfHeight = (height / 2.0f) / zoom;
         ubo.projection = glm::ortho(

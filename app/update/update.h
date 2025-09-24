@@ -1,3 +1,3 @@
 #include "core.h"
 
-void update(ProtoThiApp& hooks, FPSCounter& fps);
+void update(ProtoThiApp& api, FPSCounter& fps);

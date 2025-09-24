@@ -179,7 +179,6 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = swapChainExtent;
 
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 
@@ -213,7 +212,27 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
             
             VkBuffer ib = indexBuffers[currentFrame];
             vkCmdBindIndexBuffer(commandBuffer, ib, 0, VK_INDEX_TYPE_UINT16);
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+            for (const auto& poly : polygons) {
+                if (!poly.alive) continue;
+
+                vkCmdPushConstants(
+                    commandBuffer,
+                    pipelineLayouts[0],
+                    VK_SHADER_STAGE_VERTEX_BIT,
+                    0,
+                    Polygon::PushConstantSize(),
+                    &poly.pushConstant
+                );
+
+                vkCmdDrawIndexed(
+                    commandBuffer,
+                    poly.indexCount,
+                    1,
+                    poly.indexOffset,
+                    poly.vertexOffset,
+                    0
+                );
+            }
         }
         {
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[1]);

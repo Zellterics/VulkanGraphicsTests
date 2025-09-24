@@ -10,15 +10,29 @@
 
 ProtoThiApp::ProtoThiApp(){
     zoom = 1;
-    offset = {100, 100};
-    bool updateUBOFlag = true;
-    bool framebufferResized = false;
+    offset = {0, 0};
+    updateUBOFlag = true;
+    framebufferResized = false;
+    clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // NEGRO ESTANDAR
+    
+
     vertices = {
-        {{1000.f, 1000.f}, {1.0f, 0.0f, 0.0f}},
-        {{1050.f, 1000.f}, {0.0f, 1.0f, 0.0f}},
-        {{1050.f, 1050.f}, {0.0f, 0.0f, 1.0f}},
-        {{1000.f, 1050.f}, {1.0f, 1.0f, 1.0f}},
-        {{1050.f, 950.f}, {1.0f, 0.0f, 1.0f}}
+        {{ 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+        {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}},
+        {{ 0.0f,  1.0f}, {1.0f, 0.0f, 1.0f}}
+    };
+
+    polygons.push_back({"test", 0, 5, 0, 9, true, 
+        {build2DTransform(
+            {100.0f, 100.0f},
+            glm::radians(0.0f),
+            {50.0f, 50.0f}
+        )}});
+    
+    indices = {
+        0, 1, 2, 2, 3, 0, 4, 1, 0
     };
 
     ubo = {};
@@ -36,9 +50,7 @@ ProtoThiApp::ProtoThiApp(){
 
     quadIndices = {0,1,2,2,3,0};
 
-    indices = {
-        0, 1, 2, 2, 3, 0, 4, 1, 0
-    };
+    
 
     updateCallback = nullptr;
     UICallback = nullptr;

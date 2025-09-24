@@ -83,12 +83,18 @@ void ProtoThiApp::createBasicGraphicsPipeline() {
     basicDynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     basicDynamicState.pDynamicStates = dynamicStates.data();
 
+    // push constants for polygon transforms
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = Polygon::PushConstantSize();
+
     VkPipelineLayoutCreateInfo basicPipelineLayoutInfo{};
     basicPipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     basicPipelineLayoutInfo.setLayoutCount = 1;
     basicPipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-    basicPipelineLayoutInfo.pushConstantRangeCount = 0;
-    basicPipelineLayoutInfo.pPushConstantRanges = nullptr;
+    basicPipelineLayoutInfo.pushConstantRangeCount = 1;
+    basicPipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
     if (vkCreatePipelineLayout(device, &basicPipelineLayoutInfo, nullptr, &pipelineLayouts[0]) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");

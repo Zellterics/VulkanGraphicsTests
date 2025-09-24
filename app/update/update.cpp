@@ -1,27 +1,28 @@
 #include "update.h"
+#include "core.h"
 #include "globals.h"
 #include "physicsObject.h"
 #include <thread>
 
-void update(ProtoThiApp& hooks, FPSCounter& fps){
-    std::vector<Circle>* circleCenters = hooks.getCircleDrawVector();
+void update(ProtoThiApp& api, FPSCounter& fps){
+    std::vector<Circle>* circleCenters = api.getCircleDrawVector();
     int x, y;
     static bool changedResolution = false;
-    hooks.getWindowSize(&x, &y);
+    api.getWindowSize(&x, &y);
     x /= 2;
     y /= 2;
     static std::vector<PhysicsObject> circlePhysics = {{{-50.f, -50.f},{-50.f, -50.f},{0,0}}};
     glm::vec2 randomPos = {
-        getRandomFloat((x - dockedSizeX / 2.f) * spawnPoint[0] + dockedSizeX / 2.f, ((x - dockedSizeX / 2.f - spawnRadius) * spawnPoint[0]) + spawnRadius + dockedSizeX / 2.f), 
-        getRandomFloat(y * spawnPoint[1], ((y - spawnRadius) * spawnPoint[1]) + spawnRadius)};
-    const int BIGGER_RADIUS = 8;
-    const int BIGGER_RADIUS_MINUS = BIGGER_RADIUS - 1;
-    const int SMALLER_RADIUS = 4;
-    (*circleCenters).push_back({randomPos,getRandomFloat(SMALLER_RADIUS,BIGGER_RADIUS), {getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f}});
+        getRandomNumber((x - dockedSizeX / 2.f) * spawnPoint[0] + dockedSizeX / 2.f, ((x - dockedSizeX / 2.f - spawnRadius) * spawnPoint[0]) + spawnRadius + dockedSizeX / 2.f), 
+        getRandomNumber(y * spawnPoint[1], ((y - spawnRadius) * spawnPoint[1]) + spawnRadius)};
+    const float BIGGER_RADIUS = 8;
+    const float BIGGER_RADIUS_MINUS = BIGGER_RADIUS - 1;
+    const float SMALLER_RADIUS = 4;
+    (*circleCenters).push_back({randomPos,getRandomNumber(SMALLER_RADIUS,BIGGER_RADIUS), {getRandomNumber(0.0f,100.0f)/100.0f, getRandomNumber(0.0f,100.0f)/100.0f, getRandomNumber(0.0f,100.0f)/100.0f}});
     circlePhysics.push_back({randomPos, randomPos, {0.f,0.f}});
     const int steps = 2;
     const float sub_dt = simSpeed / (float)steps;
-    int circleAmount = hooks.getCircleAmount();
+    int circleAmount = api.getCircleAmount();
     int gridWidth = (x + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
     int gridHeight = (y + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
     static std::vector<std::vector<int>> circleID(gridWidth * gridHeight);
