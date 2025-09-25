@@ -2,6 +2,7 @@
 #include <ThING/extras/vulkanSupport.h>
 
 #include "ThING/graphics/bufferManager.h"
+#include "ThING/graphics/pipelineManager.h"
 #include "imgui.h"
 
 #include "backends/imgui_impl_glfw.h"
@@ -79,17 +80,14 @@ void ProtoThiApp::initVulkan() {
     createLogicalDevice();
     createSwapChain();
     createImageViews();
-    createRenderPass();
-    createDescriptorSetLayout();
-    createBasicGraphicsPipeline();
-    createCircleGraphicsPipeline();
+    pipelineManager.init(device, swapChainImageFormat);
     createFramebuffers();
+    pipelineManager.createPipelines();
     createCommandPool();
     bufferManager = BufferManager{device, physicalDevice, commandPool, graphicsQueue};
     createCustomBuffers();
     createUniformBuffers();
-    createDescriptorPool();
-    createDescriptorSets();
+    pipelineManager.createDescriptors(uniformBuffers);
     createCommandBuffers();
     createSyncObjects();
 }
@@ -102,20 +100,13 @@ void ProtoThiApp::cleanup() {
 
     cleanupSwapChain();
 
-    for(int i = 0; i < 2; i++){
-        vkDestroyPipeline(device, graphicsPipelines[i], nullptr);
-        vkDestroyPipelineLayout(device, pipelineLayouts[i], nullptr);
-    }
+    pipelineManager.~PipelineManager();
+    vkDestroyDescriptorPool(device, imguiDescriptorPool, nullptr);
+
     vkFreeCommandBuffers(device, commandPool,
         static_cast<uint32_t>(commandBuffers.size()),
         commandBuffers.data());
     commandBuffers.clear();
-
-    vkDestroyDescriptorPool(device, descriptorPool, nullptr);
-    vkDestroyDescriptorPool(device, imguiDescriptorPool, nullptr);
-    vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
-
-    vkDestroyRenderPass(device, renderPass, nullptr);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);

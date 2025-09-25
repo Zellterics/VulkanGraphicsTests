@@ -17,7 +17,7 @@ void ProtoThiApp::createFramebuffers() {
 
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = renderPass;
+        framebufferInfo.renderPass = pipelineManager.getrenderPass();
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = attachments;
         framebufferInfo.width = swapChainExtent.width;
@@ -29,6 +29,7 @@ void ProtoThiApp::createFramebuffers() {
         }
     }
 }
+
 void ProtoThiApp::createCustomBuffers(){
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
@@ -84,7 +85,7 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
 
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPass;
+    renderPassInfo.renderPass = pipelineManager.getrenderPass();
     renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
     renderPassInfo.renderArea.offset = {0, 0};
     renderPassInfo.renderArea.extent = swapChainExtent;
@@ -107,12 +108,12 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
         scissor.extent = swapChainExtent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
         {
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[0]);
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineManager.getGraphicsPipelines()[0]);
             vkCmdBindDescriptorSets(
                 commandBuffer,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipelineLayouts[0],
-                0, 1, &descriptorSets[currentFrame],
+                pipelineManager.getLayouts()[0],
+                0, 1, &pipelineManager.getDescriptorSets()[currentFrame],
                 0, nullptr
             );
 
@@ -127,7 +128,7 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
 
                 vkCmdPushConstants(
                     commandBuffer,
-                    pipelineLayouts[0],
+                    pipelineManager.getLayouts()[0],
                     VK_SHADER_STAGE_VERTEX_BIT,
                     0,
                     Polygon::PushConstantSize(),
@@ -145,12 +146,12 @@ void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t im
             }
         }
         {
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelines[1]);
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineManager.getGraphicsPipelines()[1]);
             vkCmdBindDescriptorSets(
                 commandBuffer,
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                pipelineLayouts[1],
-                0, 1, &descriptorSets[currentFrame],
+                pipelineManager.getLayouts()[1],
+                0, 1, &pipelineManager.getDescriptorSets()[currentFrame],
                 0, nullptr
             );
 

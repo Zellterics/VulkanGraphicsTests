@@ -7,17 +7,14 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include <filesystem>
 #include <iostream>
-#include <fstream>
 #include <vector>
-#include <cstring>
-#include <cstdlib>
 #include <cstdint>
 
 #include <ThING/consts.h>
 #include <ThING/core/detail.h>
 #include <ThING/graphics/bufferManager.h>
+#include <ThING/graphics/pipelineManager.h>
 #include <ThING/window/windowManager.h>
 #include <ThING/extras/handMade.h>
 #include <ThING/extras/fpsCounter.h>
@@ -53,6 +50,7 @@ public:
 private:
     WindowManager windowManager;
     BufferManager bufferManager;
+    PipelineManager pipelineManager;
 
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -71,10 +69,6 @@ private:
     std::vector<VkImageView> swapChainImageViews;
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
-    VkRenderPass renderPass;
-    VkPipelineLayout pipelineLayouts[2];
-    VkPipeline graphicsPipelines[2];
-
     VkCommandPool commandPool;
     //Buffers
     Buffer vertexBuffers[MAX_FRAMES_IN_FLIGHT];
@@ -86,9 +80,6 @@ private:
     
     std::vector<DynamicBuffer<MAX_FRAMES_IN_FLIGHT>> stagingBuffers;
 
-    VkDescriptorSetLayout descriptorSetLayout;
-    VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
-    VkDescriptorPool descriptorPool;
     VkDescriptorPool imguiDescriptorPool;
     //-------------------------------------
     std::vector<VkCommandBuffer> commandBuffers;
@@ -135,22 +126,15 @@ private:
     void createLogicalDevice();
     void createSwapChain();
     void createImageViews();
-    void createRenderPass();
-    void createBasicGraphicsPipeline();
-    void createCircleGraphicsPipeline();
     void createFramebuffers();
     void createCustomBuffers();
     void createCommandPool();
     void uploadBuffer(VkDeviceSize bufferSize, VkBuffer *buffer, void* bufferData);
-    void createDescriptorSetLayout();
-    void createDescriptorPool();
-    void createDescriptorSets();
     void createUniformBuffers();
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void createSyncObjects();
     void drawFrame();
-    VkShaderModule createShaderModule(const std::vector<char>& code);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
@@ -160,25 +144,7 @@ private:
     bool checkValidationLayerSupport();
     VkCommandBuffer beginSingleTimeCommands();
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-    static std::vector<char> readFile(const std::string& filename) {
-        std::string base = osd::getExecutableDir();
-        std::ifstream file(std::filesystem::path(base) / filename, std::ios::ate | std::ios::binary);
-
-        if (!file.is_open()) {
-            #ifndef DEBUG
-            throw std::runtime_error("failed to open file!");
-            #endif
-        }
-        size_t fileSize = (size_t) file.tellg();
-        std::vector<char> buffer(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-
-        file.close();
-
-        return buffer;
-    }
+    
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
         #ifdef DEBUG

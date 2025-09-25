@@ -1,4 +1,5 @@
 #include <ThING/core.h>
+#include <cstring>
 #include <glm/gtc/matrix_transform.hpp>
 
 void ProtoThiApp::createUniformBuffers(){

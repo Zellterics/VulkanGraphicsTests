@@ -1,4 +1,4 @@
-//TESTS ERASE LATER
+#pragma once
 #include <concepts>
 #include <random>
 
