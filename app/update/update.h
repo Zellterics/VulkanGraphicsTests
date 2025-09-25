@@ -1,3 +1,3 @@
-#include "core.h"
+#include <ThING/core.h>
 
 void update(ProtoThiApp& api, FPSCounter& fps);

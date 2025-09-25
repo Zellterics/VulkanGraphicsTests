@@ -1,4 +1,4 @@
-#include "core.h"
+#include <ThING/core.h>
 #include <ostream>
 #include "ui.h"
 #include "update.h"

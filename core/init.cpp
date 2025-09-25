@@ -1,5 +1,5 @@
-#include "core.h"
-#include "vulkanSupport.h"
+#include <ThING/core.h>
+#include <ThING/extras/vulkanSupport.h>
 
 #include <set>
 
@@ -43,7 +43,7 @@ void ProtoThiApp::createInstance() {
 }
 
 void ProtoThiApp::createSurface() {
-    if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+    if (glfwCreateWindowSurface(instance, windowManager.getWindow(), nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");
     }
 }

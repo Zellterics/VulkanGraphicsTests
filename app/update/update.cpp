@@ -1,5 +1,5 @@
 #include "update.h"
-#include "core.h"
+#include <ThING/core.h>
 #include "globals.h"
 #include "physicsObject.h"
 #include <thread>

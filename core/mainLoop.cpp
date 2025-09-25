@@ -1,4 +1,4 @@
-#include "core.h"
+#include <ThING/core.h>
 // Dear ImGui
 #include "imgui.h"
 
@@ -9,9 +9,8 @@
 
 
 void ProtoThiApp::mainLoop() {
-    constexpr float delay = 1 / (float)FPS;
     FPSCounter fps;
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(windowManager.getWindow())) {
         
         //FRAME INIT
         ImGui_ImplVulkan_NewFrame();
@@ -32,9 +31,7 @@ void ProtoThiApp::mainLoop() {
 void ProtoThiApp::renderFrame(){
     // FOR OPTIMIZATION PROPOSES YOU CAN USE A DIRTY FLAG TO UPDATE ONLY WHEN CHANGES WHERE SUBMITED, NOT REALLY NECESSARY WITH THE ACTUAL APPROACH
     updateUniformBuffers(currentFrame);
-    updateIndexBuffers(currentFrame);
-    updateVertexBuffers(currentFrame);
-    updateCircleBuffers(currentFrame);
+    updateCustomBuffers(currentFrame);
     glfwPollEvents();
     drawFrame();
 }

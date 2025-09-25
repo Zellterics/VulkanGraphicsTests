@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ThING/types/buffer.h"
 #include "glm/fwd.hpp"
 #include <functional>
 #define GLFW_INCLUDE_VULKAN
@@ -14,19 +15,15 @@
 #include <cstdlib>
 #include <cstdint>
 
-#include "handMade.h"
-#include "vertex.h"
-#include "uniformBufferObject.h"
+#include <ThING/consts.h>
+#include <ThING/core/detail.h>
+#include <ThING/graphics/bufferManager.h>
+#include <ThING/window/windowManager.h>
+#include <ThING/extras/handMade.h>
+#include <ThING/extras/fpsCounter.h>
+#include <ThING/types.h>
 
-#include "quad.h"
-#include "circle.h"
-#include "polygon.h"
 
-#include "fpsCounter.h"
-constexpr int FPS = 60;
-const uint32_t WIDTH = 1200;
-const uint32_t HEIGHT = 800;
-const int MAX_FRAMES_IN_FLIGHT = 3;
 
 //---------------------------------------------------------------------------------------
 //
@@ -50,8 +47,12 @@ public:
     std::string makeUniqueId(std::string baseId);
     void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>& ver, std::vector<uint16_t>& ind);
     void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>&& ver, std::vector<uint16_t>&& ind);
+
+    //detail
+    friend void detail::setResizedFlag(ProtoThiApp& app, bool flag);
 private:
-    GLFWwindow* window;
+    WindowManager windowManager;
+    BufferManager bufferManager;
 
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -75,31 +76,20 @@ private:
     VkPipeline graphicsPipelines[2];
 
     VkCommandPool commandPool;
-    //*------------------------------------
-    VkBuffer vertexBuffers[MAX_FRAMES_IN_FLIGHT];
-    VkDeviceMemory vertexBufferMemorys[MAX_FRAMES_IN_FLIGHT];
+    //Buffers
+    Buffer vertexBuffers[MAX_FRAMES_IN_FLIGHT];
+    Buffer indexBuffers[MAX_FRAMES_IN_FLIGHT];
+    Buffer uniformBuffers[MAX_FRAMES_IN_FLIGHT];
+    Buffer quadBuffer;
+    Buffer circleBuffers[MAX_FRAMES_IN_FLIGHT];
+    Buffer quadIndexBuffer;
     
-    VkBuffer indexBuffers[MAX_FRAMES_IN_FLIGHT];
-    VkDeviceMemory indexBufferMemorys[MAX_FRAMES_IN_FLIGHT];
-
-    VkBuffer uniformBuffers[MAX_FRAMES_IN_FLIGHT];
-    VkDeviceMemory uniformBufferMemorys[MAX_FRAMES_IN_FLIGHT];
-
-    VkBuffer quadBuffer;
-    VkDeviceMemory quadBufferMemory;
-
-    VkBuffer circleBuffers[MAX_FRAMES_IN_FLIGHT];
-    VkDeviceMemory circleBufferMemorys[MAX_FRAMES_IN_FLIGHT];
-    
-    VkBuffer quadIndexBuffer;
-    VkDeviceMemory quadIndexBufferMemory;
-
-    std::vector<VkBuffer*> stagingBuffers;
-    std::vector<VkDeviceMemory*> stagingBufferMemorys;
+    std::vector<DynamicBuffer<MAX_FRAMES_IN_FLIGHT>> stagingBuffers;
 
     VkDescriptorSetLayout descriptorSetLayout;
     VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
     VkDescriptorPool descriptorPool;
+    VkDescriptorPool imguiDescriptorPool;
     //-------------------------------------
     std::vector<VkCommandBuffer> commandBuffers;
 
@@ -127,21 +117,14 @@ private:
     VkClearValue clearColor;
     std::vector<Polygon> polygons;
 
-    void initWindow();
     void initVulkan();
     void initImGui();
     void mainLoop();
     void cleanupSwapChain();
-
-    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto app = reinterpret_cast<ProtoThiApp*>(glfwGetWindowUserPointer(window));
-        app->framebufferResized = true;
-    }
+    
     void renderFrame();
-    void updateVertexBuffers(uint32_t frameIndex);
-    void updateIndexBuffers(uint32_t frameIndex);
+    void updateCustomBuffers(uint32_t frameIndex);
     void updateUniformBuffers(uint32_t frameIndex);
-    void updateCircleBuffers(uint32_t frameIndex);
     void cleanup();
     void recreateSwapChain();
     void createInstance();
@@ -156,22 +139,13 @@ private:
     void createBasicGraphicsPipeline();
     void createCircleGraphicsPipeline();
     void createFramebuffers();
+    void createCustomBuffers();
     void createCommandPool();
-    void createVertexBuffers();
-    void createIndexBuffers();
-    void createQuadBuffer();
-    void createQuadIndexBuffer();
-    void createCircleBuffer();
     void uploadBuffer(VkDeviceSize bufferSize, VkBuffer *buffer, void* bufferData);
-    void saveStagingBuffer(VkBuffer *buffer);
-    void saveStagingBufferMemorys(VkDeviceMemory *bufferMemory);
     void createDescriptorSetLayout();
     void createDescriptorPool();
     void createDescriptorSets();
     void createUniformBuffers();
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void createSyncObjects();

@@ -1,4 +1,4 @@
-#include "core.h"
+#include <ThING/core.h>
 
 void ProtoThiApp::createBasicGraphicsPipeline() {
     auto basicVertShaderCode = readFile("../shaders/basicVert.spv");

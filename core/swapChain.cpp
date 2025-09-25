@@ -1,5 +1,5 @@
-#include "core.h"
-#include "vulkanSupport.h"
+#include <ThING/core.h>
+#include <ThING/extras/vulkanSupport.h>
 
 void ProtoThiApp::createSwapChain() {
     SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
@@ -54,9 +54,9 @@ void ProtoThiApp::createSwapChain() {
 
 void ProtoThiApp::recreateSwapChain() {
     int width = 0, height = 0;
-    glfwGetFramebufferSize(window, &width, &height);
+    glfwGetFramebufferSize(windowManager.getWindow(), &width, &height);
     while (width == 0 || height == 0) {
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(windowManager.getWindow(), &width, &height);
         glfwWaitEvents();
     }
 
@@ -131,7 +131,7 @@ VkExtent2D ProtoThiApp::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabil
         return capabilities.currentExtent;
     } else {
         int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(windowManager.getWindow(), &width, &height);
 
         VkExtent2D actualExtent = {
             static_cast<uint32_t>(width),

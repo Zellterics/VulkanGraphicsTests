@@ -14,52 +14,44 @@ option(GLFW_BUILD_DOCS OFF)
 option(GLFW_INSTALL OFF)
 option(GLFW_BUILD_SHARED_LIBS OFF)
 
-# Subdirectorios
 add_subdirectory(external/glfw)
 add_subdirectory(external/glm)
 add_compile_definitions(DEBUG=true)
 
-# Headers propios
 include_directories(
     external/glfw/include
     external/imgui
-    core
-    complementary
-    types
     app
     app/UI
     app/update
 )
 
-# Vulkan según SO
+
 if(WIN32)
-    message(STATUS "Configurando Vulkan para Windows (LunarG SDK)")
+    message(STATUS "WINDOWS CONFIG")
     include_directories("$ENV{VULKAN_SDK}/Include")
     link_directories("$ENV{VULKAN_SDK}/Lib")
     set(VULKAN_LIB vulkan-1)
 else()
-    message(STATUS "Configurando Vulkan para Linux (pacman)")
+    message(STATUS "LINUX CONFIG")
     find_package(Vulkan REQUIRED)
     set(VULKAN_LIB Vulkan::Vulkan)
 endif()
 
 file(GLOB_RECURSE APP_SOURCES
     app/*.cpp
-)
-
-file(GLOB CORE_SOURCES
     core/*.cpp
 )
 
-file(GLOB COMPLEMENTARY_SOURCES
-    complementary/*.cpp
+file(GLOB EXTRAS_SOURCES
+    extras/*.cpp
 )
 
 # Ejecutable
 add_executable(${PROJECT_NAME} 
     main.cpp
     ${CORE_SOURCES}
-    ${COMPLEMENTARY_SOURCES}
+    ${EXTRAS_SOURCES}
     ${APP_SOURCES}
     external/imgui/imgui.cpp
     external/imgui/imgui_draw.cpp
@@ -67,6 +59,10 @@ add_executable(${PROJECT_NAME}
     external/imgui/imgui_tables.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_vulkan.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 if(MINGW OR WIN32)
@@ -77,13 +73,13 @@ if(MINGW OR WIN32)
     )
 else()
     target_link_options(${PROJECT_NAME} PRIVATE
-        # -static A LINUX NO LE GUSTA ESTO
+        # -static LINUX DOESN'T LIKE THIS
         -static-libgcc
         -static-libstdc++
     )
 endif()
 
-# Linkeo
+# LINK
 if(MINGW OR WIN32)
     target_link_libraries(${PROJECT_NAME}
         glfw

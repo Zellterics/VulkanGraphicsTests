@@ -1,5 +1,5 @@
-#include "core.h"
-#include "vulkanSupport.h"
+#include <ThING/core.h>
+#include <ThING/extras/vulkanSupport.h>
 
 // Dear ImGui
 #include "imgui.h"
@@ -9,18 +9,14 @@
 #include "backends/imgui_impl_vulkan.h"
 
 void ProtoThiApp::initImGui() {
-    // 1. Crear contexto
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    // 2. Estilos
     ImGui::StyleColorsDark();
 
-    // 3. Inicializar backend GLFW
-    ImGui_ImplGlfw_InitForVulkan(window, true);
+    ImGui_ImplGlfw_InitForVulkan(windowManager.getWindow(), true);
 
-    // 4. Crear DescriptorPool dedicado a ImGui
     VkDescriptorPoolSize pool_sizes[] = {
         { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
         { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -42,7 +38,7 @@ void ProtoThiApp::initImGui() {
     pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
     pool_info.pPoolSizes = pool_sizes;
 
-    if (vkCreateDescriptorPool(device, &pool_info, nullptr, &descriptorPool) != VK_SUCCESS) {
+    if (vkCreateDescriptorPool(device, &pool_info, nullptr, &imguiDescriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create ImGui descriptor pool!");
     }
 
@@ -53,12 +49,12 @@ void ProtoThiApp::initImGui() {
     init_info.QueueFamily = findQueueFamilies(physicalDevice, surface).graphicsFamily.value();
     init_info.Queue = graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
-    init_info.DescriptorPool = descriptorPool;
+    init_info.DescriptorPool = imguiDescriptorPool;
     init_info.MinImageCount = 2;
     init_info.ImageCount = static_cast<uint32_t>(swapChainImages.size());
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-    init_info.UseDynamicRendering = false;        // 🚨 IMPORTANTE: desactivar dynamic rendering
-    init_info.RenderPass = renderPass;            // 🚨 Debes pasar tu renderPass aquí
+    init_info.UseDynamicRendering = false;
+    init_info.RenderPass = renderPass;
 
     if (!ImGui_ImplVulkan_Init(&init_info)) {
         throw std::runtime_error("failed to init ImGui Vulkan backend!");

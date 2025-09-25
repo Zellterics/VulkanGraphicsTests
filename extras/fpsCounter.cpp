@@ -1,4 +1,4 @@
-#include "fpsCounter.h"
+#include <ThING/extras/fpsCounter.h>
 #include <iostream>
 
 bool FPSCounter::frame() {

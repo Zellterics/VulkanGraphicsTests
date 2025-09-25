@@ -1,9 +1,10 @@
-#include "core.h"
+#include <ThING/core.h>
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
-#include "vertex.h"
+#include <ThING/types/vertex.h>
 #include <cstdint>
 #include <iterator>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -12,7 +13,7 @@ int ProtoThiApp::getCircleAmount(){
 }
 
 void ProtoThiApp::getWindowSize(int* x, int* y){
-    glfwGetWindowSize(window, x, y);
+    glfwGetWindowSize(windowManager.getWindow(), x, y);
     return;
 }
 
@@ -98,7 +99,9 @@ void ProtoThiApp::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm
         build2DTransform(pos, rotation, scale)
     });
     vertices.reserve(vertices.size() + ver.size());
-    indices.reserve(indices.size() + indices.size());
+    indices.reserve(indices.size() + ind.size());
     vertices.insert(vertices.end(), std::make_move_iterator(ver.begin()), std::make_move_iterator(ver.end()));
     indices.insert(indices.end(), std::make_move_iterator(ind.begin()), std::make_move_iterator(ind.end()));
+    std::cout << vertices.size() << std::endl;
+    std::cout << indices.size() << std::endl;
 }

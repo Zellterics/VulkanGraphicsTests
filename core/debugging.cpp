@@ -1,5 +1,5 @@
-#include "core.h"
-#include "vulkanSupport.h"
+#include <ThING/core.h>
+#include <ThING/extras/vulkanSupport.h>
 
 void ProtoThiApp::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
     createInfo = {};

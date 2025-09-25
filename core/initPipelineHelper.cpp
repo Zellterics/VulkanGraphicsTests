@@ -1,4 +1,4 @@
-#include "core.h"
+#include <ThING/core.h>
 
 
 VkShaderModule ProtoThiApp::createShaderModule(const std::vector<char>& code) {
@@ -70,7 +70,7 @@ void ProtoThiApp::createDescriptorSets() {
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         VkDescriptorBufferInfo bufferInfo{};
-        bufferInfo.buffer = uniformBuffers[i];
+        bufferInfo.buffer = uniformBuffers[i].buffer;
         bufferInfo.offset = 0;
         bufferInfo.range = sizeof(UniformBufferObject);
 

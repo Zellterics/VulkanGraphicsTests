@@ -1,21 +1,19 @@
-#include "core.h"
-#include "vulkanSupport.h"
+#include <ThING/core.h>
+#include <ThING/extras/vulkanSupport.h>
 
-// Dear ImGui
+#include "ThING/graphics/bufferManager.h"
 #include "imgui.h"
 
-// Backends (GLFW + Vulkan)
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
-ProtoThiApp::ProtoThiApp(){
+ProtoThiApp::ProtoThiApp() : windowManager(WIDTH, HEIGHT, "vulkan"){
     zoom = 1;
     offset = {0, 0};
     updateUBOFlag = true;
     framebufferResized = false;
     clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // NEGRO ESTANDAR
     
-
     vertices = {
         {{ 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
@@ -57,7 +55,6 @@ ProtoThiApp::ProtoThiApp(){
 }
 
 void ProtoThiApp::run() {
-    initWindow();
     initVulkan();
     initImGui();
     mainLoop();
@@ -74,16 +71,6 @@ bool ProtoThiApp::setUICallback(std::function<void(ProtoThiApp&, FPSCounter&)> U
     return static_cast<bool>(updateCallback);
 }
 
-void ProtoThiApp::initWindow() {
-    glfwInit();
-
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-    glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-}
-
 void ProtoThiApp::initVulkan() {
     createInstance();
     setupDebugMessenger();
@@ -98,11 +85,8 @@ void ProtoThiApp::initVulkan() {
     createCircleGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
-    createVertexBuffers();
-    createIndexBuffers();
-    createQuadBuffer();
-    createQuadIndexBuffer();
-    createCircleBuffer();
+    bufferManager = BufferManager{device, physicalDevice, commandPool, graphicsQueue};
+    createCustomBuffers();
     createUniformBuffers();
     createDescriptorPool();
     createDescriptorSets();
@@ -122,30 +106,50 @@ void ProtoThiApp::cleanup() {
         vkDestroyPipeline(device, graphicsPipelines[i], nullptr);
         vkDestroyPipelineLayout(device, pipelineLayouts[i], nullptr);
     }
-    
+    vkFreeCommandBuffers(device, commandPool,
+        static_cast<uint32_t>(commandBuffers.size()),
+        commandBuffers.data());
+    commandBuffers.clear();
+
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    vkDestroyDescriptorPool(device, imguiDescriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
 
     vkDestroyRenderPass(device, renderPass, nullptr);
-    vkDestroyBuffer(device, quadBuffer, nullptr);
-    vkFreeMemory(device, quadBufferMemory, nullptr);
-    vkDestroyBuffer(device, quadIndexBuffer, nullptr);
-    vkFreeMemory(device, quadIndexBufferMemory, nullptr);
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
         vkDestroyFence(device, inFlightFences[i], nullptr);
-        vkDestroyBuffer(device, vertexBuffers[i], nullptr);
-        vkFreeMemory(device, vertexBufferMemorys[i], nullptr);
-        vkDestroyBuffer(device, indexBuffers[i], nullptr);
-        vkFreeMemory(device, indexBufferMemorys[i], nullptr);
-        vkDestroyBuffer(device, uniformBuffers[i], nullptr);
-        vkFreeMemory(device, uniformBufferMemorys[i], nullptr);
-        vkDestroyBuffer(device, circleBuffers[i], nullptr);
-        vkFreeMemory(device, circleBufferMemorys[i], nullptr);
+    }
+    quadBuffer.~Buffer();  
+    quadIndexBuffer.~Buffer();
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vertexBuffers[i].~Buffer();
+        indexBuffers[i].~Buffer();  
+        uniformBuffers[i].~Buffer(); 
+        circleBuffers[i].~Buffer();  
     }
 
+    for (auto& dyn : stagingBuffers) {
+        if (dyn.isMapped) {
+            vkUnmapMemory(device, dyn.stagingBuffer.memory);
+            dyn.isMapped = false;
+            dyn.mappedData = nullptr;
+        }
+        if (dyn.stagingBuffer.buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(device, dyn.stagingBuffer.buffer, nullptr);
+        if (dyn.stagingBuffer.memory != VK_NULL_HANDLE)
+            vkFreeMemory(device, dyn.stagingBuffer.memory, nullptr);
+        dyn.stagingBuffer.buffer = VK_NULL_HANDLE;
+        dyn.stagingBuffer.memory = VK_NULL_HANDLE;
+    }
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        if (uniformBuffers[i].buffer != VK_NULL_HANDLE)
+            vkDestroyBuffer(device, uniformBuffers[i].buffer, nullptr);
+        if (uniformBuffers[i].memory != VK_NULL_HANDLE)
+            vkFreeMemory(device, uniformBuffers[i].memory, nullptr);
+    }
+    
     // while(!graphicsPipelines.empty()){
     //     vkDestroyPipeline(device, graphicsPipelines.back(), nullptr);
     //     graphicsPipelines.pop_back();
@@ -155,20 +159,6 @@ void ProtoThiApp::cleanup() {
     //     vkDestroyPipelineLayout(device, pipelineLayouts.back(), nullptr);
     //     pipelineLayouts.pop_back();
     // }
-    
-
-
-    while(!stagingBuffers.empty()){
-        vkDestroyBuffer(device, *stagingBuffers.back(), nullptr);
-        stagingBuffers.pop_back();
-    }
-
-    while(!stagingBufferMemorys.empty()){
-        vkFreeMemory(device, *stagingBufferMemorys.back(), nullptr);
-        stagingBufferMemorys.pop_back();
-    }
-
-    
 
     vkDestroyCommandPool(device, commandPool, nullptr);
 
@@ -181,7 +171,7 @@ void ProtoThiApp::cleanup() {
     vkDestroySurfaceKHR(instance, surface, nullptr);
     vkDestroyInstance(instance, nullptr);
 
-    glfwDestroyWindow(window);
+    
 
     glfwTerminate();
 }

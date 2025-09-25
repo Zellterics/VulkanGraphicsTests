@@ -3,7 +3,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "globals.h"
-#include "imGuiCustom.h"
+#include <ThING/extras/imGuiCustom.h>
 
 void UI(ProtoThiApp& api, FPSCounter& fps){
     static glm::vec2 offset = {0,0};
@@ -87,7 +87,6 @@ void UI(ProtoThiApp& api, FPSCounter& fps){
     api.setBackgroundColor(bgColorVec);
     api.setZoomAndOffset(zoom, offset);
 
-    //ImGui window size
     ImGuiDockNode* node = ImGui::DockBuilderGetNode(dockspaceID);
     dockedSizeX = dockedSize.x;
     static int simWidth, simHeight;
