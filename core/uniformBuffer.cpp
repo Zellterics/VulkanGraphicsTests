@@ -20,9 +20,9 @@ void ProtoThiApp::updateUniformBuffers(uint32_t frameIndex){
     static float height = 0;
 
 
-    if(width != (float) swapChainExtent.width || height != (float) swapChainExtent.height || updateUBOFlag){
-        width = (float) swapChainExtent.width;
-        height = (float) swapChainExtent.height;
+    if(width != (float) swapChainManager.getExtent().width || height != (float) swapChainManager.getExtent().height || updateUBOFlag){
+        width = (float) swapChainManager.getExtent().width;
+        height = (float) swapChainManager.getExtent().height;
         if(zoom == 0){
             zoom = .001;
         }

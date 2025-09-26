@@ -46,12 +46,12 @@ void ProtoThiApp::initImGui() {
     init_info.Instance = instance;
     init_info.PhysicalDevice = physicalDevice;
     init_info.Device = device;
-    init_info.QueueFamily = findQueueFamilies(physicalDevice, surface).graphicsFamily.value();
+    init_info.QueueFamily = findQueueFamilies(physicalDevice, swapChainManager.getSurface()).graphicsFamily.value();
     init_info.Queue = graphicsQueue;
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = imguiDescriptorPool;
     init_info.MinImageCount = 2;
-    init_info.ImageCount = static_cast<uint32_t>(swapChainImages.size());
+    init_info.ImageCount = static_cast<uint32_t>(swapChainManager.getImages().size());
     init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     init_info.UseDynamicRendering = false;
     init_info.RenderPass = pipelineManager.getrenderPass();

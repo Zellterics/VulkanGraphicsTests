@@ -75,13 +75,14 @@ bool ProtoThiApp::setUICallback(std::function<void(ProtoThiApp&, FPSCounter&)> U
 void ProtoThiApp::initVulkan() {
     createInstance();
     setupDebugMessenger();
-    createSurface();
+    swapChainManager = SwapChainManager{instance, windowManager.getWindow()};
     pickPhysicalDevice();
     createLogicalDevice();
-    createSwapChain();
-    createImageViews();
-    pipelineManager.init(device, swapChainImageFormat);
-    createFramebuffers();
+    swapChainManager.setDevice(device);
+    swapChainManager.createSwapChain(physicalDevice, windowManager.getWindow());
+    swapChainManager.createImageViews();
+    pipelineManager.init(device, swapChainManager.getImageFormat());
+    swapChainManager.createFramebuffers(pipelineManager.getrenderPass());
     pipelineManager.createPipelines();
     createCommandPool();
     bufferManager = BufferManager{device, physicalDevice, commandPool, graphicsQueue};
@@ -89,7 +90,7 @@ void ProtoThiApp::initVulkan() {
     createUniformBuffers();
     pipelineManager.createDescriptors(uniformBuffers);
     createCommandBuffers();
-    createSyncObjects();
+    swapChainManager.createSyncObjects();
 }
 
 void ProtoThiApp::cleanup() {
@@ -98,7 +99,7 @@ void ProtoThiApp::cleanup() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    cleanupSwapChain();
+    swapChainManager.cleanupSwapChain();
 
     pipelineManager.~PipelineManager();
     vkDestroyDescriptorPool(device, imguiDescriptorPool, nullptr);
@@ -108,9 +109,9 @@ void ProtoThiApp::cleanup() {
         commandBuffers.data());
     commandBuffers.clear();
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
-        vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
-        vkDestroyFence(device, inFlightFences[i], nullptr);
+        vkDestroySemaphore(device, swapChainManager.getRenderFinishedSemaphores()[i], nullptr);
+        vkDestroySemaphore(device, swapChainManager.getImageAvailableSemaphores()[i], nullptr);
+        vkDestroyFence(device, swapChainManager.getInFlightFences()[i], nullptr);
     }
     quadBuffer.~Buffer();  
     quadIndexBuffer.~Buffer();
@@ -159,7 +160,7 @@ void ProtoThiApp::cleanup() {
         DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
     }
     
-    vkDestroySurfaceKHR(instance, surface, nullptr);
+    vkDestroySurfaceKHR(instance, swapChainManager.getSurface(), nullptr);
     vkDestroyInstance(instance, nullptr);
 
     
@@ -168,19 +169,19 @@ void ProtoThiApp::cleanup() {
 }
 
 void ProtoThiApp::drawFrame() {
-    vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    vkWaitForFences(device, 1, &swapChainManager.getInFlightFences()[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(device, swapChainManager.getSwapChain(), UINT64_MAX, swapChainManager.getImageAvailableSemaphores()[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapChain();
+        swapChainManager.recreateSwapChain(physicalDevice, windowManager.getWindow(), pipelineManager.getrenderPass());
         return;
     } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 
-    vkResetFences(device, 1, &inFlightFences[currentFrame]);
+    vkResetFences(device, 1, &swapChainManager.getInFlightFences()[currentFrame]);
 
     vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
     recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
@@ -188,7 +189,7 @@ void ProtoThiApp::drawFrame() {
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+    VkSemaphore waitSemaphores[] = {swapChainManager.getImageAvailableSemaphores()[currentFrame]};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
@@ -197,11 +198,11 @@ void ProtoThiApp::drawFrame() {
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
 
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[imageIndex]};
+    VkSemaphore signalSemaphores[] = {swapChainManager.getRenderFinishedSemaphores()[imageIndex]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, swapChainManager.getInFlightFences()[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
@@ -211,7 +212,7 @@ void ProtoThiApp::drawFrame() {
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = {swapChain};
+    VkSwapchainKHR swapChains[] = {swapChainManager.getSwapChain()};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
 
@@ -221,7 +222,7 @@ void ProtoThiApp::drawFrame() {
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
         framebufferResized = false;
-        recreateSwapChain();
+        swapChainManager.recreateSwapChain(physicalDevice, windowManager.getWindow(), pipelineManager.getrenderPass());
     } else if (result != VK_SUCCESS) {
         throw std::runtime_error("failed to present swap chain image!");
     }

@@ -16,6 +16,7 @@
 #include <ThING/graphics/bufferManager.h>
 #include <ThING/graphics/pipelineManager.h>
 #include <ThING/window/windowManager.h>
+#include <ThING/graphics/swapChainManager.h>
 #include <ThING/extras/handMade.h>
 #include <ThING/extras/fpsCounter.h>
 #include <ThING/types.h>
@@ -51,10 +52,10 @@ private:
     WindowManager windowManager;
     BufferManager bufferManager;
     PipelineManager pipelineManager;
+    SwapChainManager swapChainManager;
 
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
-    VkSurfaceKHR surface;
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
@@ -62,14 +63,9 @@ private:
     VkQueue graphicsQueue;
     VkQueue presentQueue;
 
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<VkImageView> swapChainImageViews;
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-
     VkCommandPool commandPool;
+
+    uint32_t currentFrame = 0;
     //Buffers
     Buffer vertexBuffers[MAX_FRAMES_IN_FLIGHT];
     Buffer indexBuffers[MAX_FRAMES_IN_FLIGHT];
@@ -83,12 +79,6 @@ private:
     VkDescriptorPool imguiDescriptorPool;
     //-------------------------------------
     std::vector<VkCommandBuffer> commandBuffers;
-
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
-    std::vector<VkFence> imagesInFlight;
-    uint32_t currentFrame = 0;
 
     std::function<void(ProtoThiApp&, FPSCounter&)> updateCallback;
     std::function<void(ProtoThiApp&, FPSCounter&)> UICallback;
@@ -111,33 +101,26 @@ private:
     void initVulkan();
     void initImGui();
     void mainLoop();
-    void cleanupSwapChain();
     
     void renderFrame();
     void updateCustomBuffers(uint32_t frameIndex);
     void updateUniformBuffers(uint32_t frameIndex);
     void cleanup();
-    void recreateSwapChain();
+    
     void createInstance();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
     void setupDebugMessenger();
-    void createSurface();
     void pickPhysicalDevice();
     void createLogicalDevice();
-    void createSwapChain();
-    void createImageViews();
-    void createFramebuffers();
+
     void createCustomBuffers();
     void createCommandPool();
     void uploadBuffer(VkDeviceSize bufferSize, VkBuffer *buffer, void* bufferData);
     void createUniformBuffers();
     void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-    void createSyncObjects();
     void drawFrame();
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+    
     bool isDeviceSuitable(VkPhysicalDevice device);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     std::vector<const char*> getRequiredExtensions();

@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <optional>
-
+#include <vulkan/vulkan.h>
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
