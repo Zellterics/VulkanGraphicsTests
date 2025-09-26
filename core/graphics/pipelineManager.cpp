@@ -30,6 +30,7 @@ PipelineManager::~PipelineManager(){
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
+    device = VK_NULL_HANDLE;
 }
 
 void PipelineManager::createBasicGraphicsPipeline(){
