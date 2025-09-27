@@ -4,7 +4,7 @@
 #include "physicsObject.h"
 #include <thread>
 
-void update(ProtoThiApp& api, FPSCounter& fps){
+void update(ThING::API& api, FPSCounter& fps){
     std::vector<Circle>* circleCenters = api.getCircleDrawVector();
     int x, y;
     static bool changedResolution = false;

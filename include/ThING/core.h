@@ -20,28 +20,18 @@
 #include <ThING/extras/fpsCounter.h>
 #include <ThING/types.h>
 
+namespace ThING{
+    class API;
+}
+
 class ProtoThiApp {
 public:
     ProtoThiApp();
     void run();
-    bool setUpdateCallback(std::function<void(ProtoThiApp&, FPSCounter&)>);
-    bool setUICallback(std::function<void(ProtoThiApp&, FPSCounter&)>);
-
-    //API
-    int getCircleAmount();
-    void getWindowSize(int* x, int* y);
-    void addCircle(glm::vec2 pos, float radius, glm::vec3 color);
-    std::vector<Circle>* getCircleDrawVector();
-    void setZoomAndOffset(float zoom, glm::vec2 offset);
-    void setBackgroundColor(glm::vec4 color);
-    glm::mat4 build2DTransform(glm::vec2 pos, float rotation, glm::vec2 scale);
-    void setRotation(glm::vec2 pos, float rotation, glm::vec2 scale);
-    std::string makeUniqueId(std::string baseId);
-    void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>& ver, std::vector<uint16_t>& ind);
-    void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>&& ver, std::vector<uint16_t>&& ind);
 
     //detail
     friend void detail::setResizedFlag(ProtoThiApp& app, bool flag);
+    friend class ::ThING::API;
 private:
     WindowManager windowManager;
     BufferManager bufferManager;
@@ -64,9 +54,6 @@ private:
     VkDescriptorPool imguiDescriptorPool;
     
     std::vector<VkCommandBuffer> commandBuffers;
-
-    std::function<void(ProtoThiApp&, FPSCounter&)> updateCallback;
-    std::function<void(ProtoThiApp&, FPSCounter&)> UICallback;
 
     std::vector<Vertex> vertices;
     std::vector<Quad> quadVertices;

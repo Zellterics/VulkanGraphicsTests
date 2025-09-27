@@ -7,13 +7,25 @@
 
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
+
+//ERASE THIS FUNCTION WITH THE COMMENT BELLOW
+glm::mat4 build2DTransform(glm::vec2 pos, float rotation, glm::vec2 scale) {
+    glm::mat4 t(1.0f);
+    t = glm::translate(t, glm::vec3(pos, 0.0f));
+    t = glm::rotate(t, rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+    t = glm::scale(t, glm::vec3(scale, 1.0f));
+    return t;
+}
 
 ProtoThiApp::ProtoThiApp() : windowManager(WIDTH, HEIGHT, "vulkan"){
     zoom = 1;
     offset = {0, 0};
     framebufferResized = false;
-    clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // NEGRO ESTANDAR
+    clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // STANDAR = BLACK
     currentFrame = 0;
+    //ALL THE NEXT IS FOR THE EXAMPLE SQUARE, PLEASE "REMOVE" LATER AND REPLACE WITH A SINGLE TRIANGLE OFF SCREEN
     vertices = {
         {{ 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
@@ -45,29 +57,9 @@ ProtoThiApp::ProtoThiApp() : windowManager(WIDTH, HEIGHT, "vulkan"){
     };
 
     quadIndices = {0,1,2,2,3,0};
-
-    
-
-    updateCallback = nullptr;
-    UICallback = nullptr;
 }
 
-void ProtoThiApp::run() {
-    initVulkan();
-    initImGui();
-    mainLoop();
-    cleanup();
-}
 
-bool ProtoThiApp::setUpdateCallback(std::function<void(ProtoThiApp&, FPSCounter&)> updateCb){
-    updateCallback = updateCb;
-    return static_cast<bool>(updateCallback);
-}
-
-bool ProtoThiApp::setUICallback(std::function<void(ProtoThiApp&, FPSCounter&)> UICb){
-    UICallback = UICb;
-    return static_cast<bool>(updateCallback);
-}
 
 void ProtoThiApp::initVulkan() {
     createInstance();
@@ -106,11 +98,14 @@ void ProtoThiApp::cleanup() {
         commandBuffers.data());
     commandBuffers.clear();
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(device, swapChainManager.getRenderFinishedSemaphores()[i], nullptr);
+        
         vkDestroySemaphore(device, swapChainManager.getImageAvailableSemaphores()[i], nullptr);
         vkDestroyFence(device, swapChainManager.getInFlightFences()[i], nullptr);
     }
-    
+    for(auto& semaphore : swapChainManager.getRenderFinishedSemaphores()){
+        vkDestroySemaphore(device, semaphore, nullptr);
+    }
+
     bufferManager.cleanUp();
     // while(!graphicsPipelines.empty()){
     //     vkDestroyPipeline(device, graphicsPipelines.back(), nullptr);

@@ -5,7 +5,7 @@
 #include "globals.h"
 #include <ThING/extras/imGuiCustom.h>
 
-void UI(ProtoThiApp& api, FPSCounter& fps){
+void UI(ThING::API& api, FPSCounter& fps){
     static glm::vec2 offset = {0,0};
     static float zoom = 1;
     static float rotation = 0;

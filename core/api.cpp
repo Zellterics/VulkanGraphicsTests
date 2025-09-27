@@ -1,44 +1,103 @@
-#include <ThING/core.h>
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include <ThING/types/vertex.h>
 #include <cstdint>
 #include <iterator>
-#include <ostream>
+#include <iostream>
 #include <string>
 #include <vector>
+#include <ThING/api.h>
+#include "imgui.h"
 
-int ProtoThiApp::getCircleAmount(){
-    return circleCenters.size();
+// Backends (GLFW + Vulkan)
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
+
+//CONSTRUCTOR
+ThING::API::API() : app(){
+    updateCallback = nullptr;
+    uiCallback = nullptr;
 }
 
-void ProtoThiApp::getWindowSize(int* x, int* y){
-    glfwGetWindowSize(windowManager.getWindow(), x, y);
+ThING::API::~API(){
+
+}
+
+void ThING::API::run(){
+    app.initVulkan();
+    app.initImGui();
+    mainLoop();
+    app.cleanup();
+}
+
+bool ThING::API::setUpdateCallback(std::function<void(ThING::API&, FPSCounter&)> update){
+    this->updateCallback = update;
+    if(updateCallback == nullptr)
+        return false;
+    return true;
+}
+
+bool ThING::API::setUICallback(std::function<void(ThING::API&, FPSCounter&)> UI){
+    this->uiCallback = UI;\
+    if(uiCallback == nullptr)
+        return false;
+    return true;
+}
+
+//PRIVATE
+void ThING::API::mainLoop() {
+    FPSCounter fps;
+    while (!glfwWindowShouldClose(app.windowManager.getWindow())) {
+        
+        //FRAME INIT
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // Callbacks
+        uiCallback(*this, fps);
+        updateCallback(*this, fps);
+        
+        //RENDER
+        ImGui::Render();
+        app.renderFrame();
+    }
+    vkDeviceWaitIdle(app.device);
+}
+
+
+//PUBLIC
+int ThING::API::getCircleAmount(){
+    return app.circleCenters.size();
+}
+
+void ThING::API::getWindowSize(int* x, int* y){
+    glfwGetWindowSize(app.windowManager.getWindow(), x, y);
     return;
 }
 
-void ProtoThiApp::addCircle(glm::vec2 pos, float size, glm::vec3 color){
-    circleCenters.push_back({pos, size, color});
+void ThING::API::addCircle(glm::vec2 pos, float size, glm::vec3 color){
+    app.circleCenters.push_back({pos, size, color});
 }
 
-std::vector<Circle>* ProtoThiApp::getCircleDrawVector(){
-    return &circleCenters;
+std::vector<Circle>* ThING::API::getCircleDrawVector(){
+    return &app.circleCenters;
 }
 
-void ProtoThiApp::setZoomAndOffset(float zoom, glm::vec2 offset){
-    this->zoom = zoom;
-    this->offset = offset;
-    bufferManager.setUpdateUBOFlag(true);
+void ThING::API::setZoomAndOffset(float zoom, glm::vec2 offset){
+    app.zoom = zoom;
+    app.offset = offset;
+    app.bufferManager.setUpdateUBOFlag(true);
 }
 
-void ProtoThiApp::setBackgroundColor(glm::vec4 color){
-    clearColor.color.float32[0] = color.x;
-    clearColor.color.float32[1] = color.y;
-    clearColor.color.float32[2] = color.z;
-    clearColor.color.float32[3] = color.w;
+void ThING::API::setBackgroundColor(glm::vec4 color){
+    app.clearColor.color.float32[0] = color.x;
+    app.clearColor.color.float32[1] = color.y;
+    app.clearColor.color.float32[2] = color.z;
+    app.clearColor.color.float32[3] = color.w;
 }
 
-glm::mat4 ProtoThiApp::build2DTransform(glm::vec2 pos, float rotation, glm::vec2 scale) {
+glm::mat4 ThING::API::build2DTransform(glm::vec2 pos, float rotation, glm::vec2 scale) {
     glm::mat4 t(1.0f);
     t = glm::translate(t, glm::vec3(pos, 0.0f));
     t = glm::rotate(t, rotation, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -47,22 +106,22 @@ glm::mat4 ProtoThiApp::build2DTransform(glm::vec2 pos, float rotation, glm::vec2
 }
 
 
-void ProtoThiApp::setRotation(glm::vec2 pos, float rotation, glm::vec2 scale){
-    polygons[0].pushConstant.tranform = build2DTransform(
+void ThING::API::setRotation(glm::vec2 pos, float rotation, glm::vec2 scale){
+    app.polygons[0].pushConstant.tranform = build2DTransform(
             pos,
             glm::radians(rotation),
             scale
         );
 }
 
-std::string ProtoThiApp::makeUniqueId(std::string baseId) {
+std::string ThING::API::makeUniqueId(std::string baseId) {
     std::string uniqueId = baseId;
     int counter = 1;
 
     bool exists = true;
     while (exists) {
         exists = false;
-        for (const Polygon& pol : polygons) {
+        for (const Polygon& pol : app.polygons) {
             if (pol.id == uniqueId) {
                 exists = true;
                 uniqueId = baseId + std::to_string(counter++);
@@ -74,34 +133,35 @@ std::string ProtoThiApp::makeUniqueId(std::string baseId) {
 }
 
 
-void ProtoThiApp::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>& ver, std::vector<uint16_t>& ind){
-    polygons.push_back({makeUniqueId(id), 
-        static_cast<uint32_t>(vertices.size()), 
+void ThING::API::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>& ver, std::vector<uint16_t>& ind){
+    app.polygons.push_back({makeUniqueId(id), 
+        static_cast<uint32_t>(app.vertices.size()), 
         static_cast<uint32_t>(ver.size()),
-        static_cast<uint32_t>(indices.size()),
+        static_cast<uint32_t>(app.indices.size()),
         static_cast<uint32_t>(ind.size()),
         true,
         build2DTransform(pos, rotation, scale)
     });
-    vertices.reserve(vertices.size() + ver.size());
-    indices.reserve(indices.size() + indices.size());
-    vertices.insert(vertices.end(), ver.begin(), ver.end());
-    indices.insert(indices.end(), ind.begin(), ind.end());
+    app.vertices.reserve(app.vertices.size() + ver.size());
+    app.indices.reserve(app.indices.size() + app.indices.size());
+    app.vertices.insert(app.vertices.end(), ver.begin(), ver.end());
+    app.indices.insert(app.indices.end(), ind.begin(), ind.end());
 }
 
-void ProtoThiApp::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>&& ver, std::vector<uint16_t>&& ind){
-    polygons.push_back({makeUniqueId(id), 
-        static_cast<uint32_t>(vertices.size()), 
+void ThING::API::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>&& ver, std::vector<uint16_t>&& ind){
+    app.polygons.push_back({makeUniqueId(id), 
+        static_cast<uint32_t>(app.vertices.size()), 
         static_cast<uint32_t>(ver.size()),
-        static_cast<uint32_t>(indices.size()),
+        static_cast<uint32_t>(app.indices.size()),
         static_cast<uint32_t>(ind.size()),
         true,
         build2DTransform(pos, rotation, scale)
     });
-    vertices.reserve(vertices.size() + ver.size());
-    indices.reserve(indices.size() + ind.size());
-    vertices.insert(vertices.end(), std::make_move_iterator(ver.begin()), std::make_move_iterator(ver.end()));
-    indices.insert(indices.end(), std::make_move_iterator(ind.begin()), std::make_move_iterator(ind.end()));
-    std::cout << vertices.size() << std::endl;
-    std::cout << indices.size() << std::endl;
+    app.vertices.reserve(app.vertices.size() + ver.size());
+    app.indices.reserve(app.indices.size() + ind.size());
+    app.vertices.insert(app.vertices.end(), std::make_move_iterator(ver.begin()), std::make_move_iterator(ver.end()));
+    app.indices.insert(app.indices.end(), std::make_move_iterator(ind.begin()), std::make_move_iterator(ind.end()));
+    std::cout << app.vertices.size() << std::endl;
+    std::cout << app.indices.size() << std::endl;
 }
+

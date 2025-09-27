@@ -1,3 +1,3 @@
-#include <ThING/core.h>
+#include <ThING/api.h>
 
-void UI(ProtoThiApp& api, FPSCounter& fps);
+void UI(ThING::API& api, FPSCounter& fps);
