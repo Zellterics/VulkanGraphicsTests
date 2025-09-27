@@ -30,8 +30,8 @@ void ProtoThiApp::mainLoop() {
 
 void ProtoThiApp::renderFrame(){
     // FOR OPTIMIZATION PROPOSES YOU CAN USE A DIRTY FLAG TO UPDATE ONLY WHEN CHANGES WHERE SUBMITED, NOT REALLY NECESSARY WITH THE ACTUAL APPROACH
-    updateUniformBuffers(currentFrame);
-    updateCustomBuffers(currentFrame);
+    bufferManager.updateUniformBuffers(swapChainManager.getExtent(), zoom, offset, currentFrame);
+    bufferManager.updateCustomBuffers(vertices, indices, circleCenters, swapChainManager.getInFlightFences(), currentFrame);
     glfwPollEvents();
     drawFrame();
 }

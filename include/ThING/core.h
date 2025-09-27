@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ThING/types/buffer.h"
 #include "glm/fwd.hpp"
 #include <functional>
 #define GLFW_INCLUDE_VULKAN
@@ -21,13 +20,8 @@
 #include <ThING/extras/fpsCounter.h>
 #include <ThING/types.h>
 
-
-
-//---------------------------------------------------------------------------------------
-//
 class ProtoThiApp {
 public:
-    //SETUP
     ProtoThiApp();
     void run();
     bool setUpdateCallback(std::function<void(ProtoThiApp&, FPSCounter&)>);
@@ -65,26 +59,16 @@ private:
 
     VkCommandPool commandPool;
 
-    uint32_t currentFrame = 0;
-    //Buffers
-    Buffer vertexBuffers[MAX_FRAMES_IN_FLIGHT];
-    Buffer indexBuffers[MAX_FRAMES_IN_FLIGHT];
-    Buffer uniformBuffers[MAX_FRAMES_IN_FLIGHT];
-    Buffer quadBuffer;
-    Buffer circleBuffers[MAX_FRAMES_IN_FLIGHT];
-    Buffer quadIndexBuffer;
-    
-    std::vector<DynamicBuffer<MAX_FRAMES_IN_FLIGHT>> stagingBuffers;
+    uint32_t currentFrame;
 
     VkDescriptorPool imguiDescriptorPool;
-    //-------------------------------------
+    
     std::vector<VkCommandBuffer> commandBuffers;
 
     std::function<void(ProtoThiApp&, FPSCounter&)> updateCallback;
     std::function<void(ProtoThiApp&, FPSCounter&)> UICallback;
 
     std::vector<Vertex> vertices;
-    UniformBufferObject ubo;
     std::vector<Quad> quadVertices;
     std::vector<Circle> circleCenters;
     std::vector<uint16_t> quadIndices;
@@ -93,7 +77,6 @@ private:
     // Hooks Variables
     float zoom;
     glm::vec2 offset;
-    bool updateUBOFlag;
     bool framebufferResized;
     VkClearValue clearColor;
     std::vector<Polygon> polygons;
@@ -103,8 +86,6 @@ private:
     void mainLoop();
     
     void renderFrame();
-    void updateCustomBuffers(uint32_t frameIndex);
-    void updateUniformBuffers(uint32_t frameIndex);
     void cleanup();
     
     void createInstance();
@@ -113,12 +94,15 @@ private:
     void pickPhysicalDevice();
     void createLogicalDevice();
 
-    void createCustomBuffers();
     void createCommandPool();
-    void uploadBuffer(VkDeviceSize bufferSize, VkBuffer *buffer, void* bufferData);
-    void createUniformBuffers();
     void createCommandBuffers();
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, 
+    uint32_t imageIndex,
+    Buffer* vertexBuffers,
+    Buffer* indexBuffers,
+    Buffer& quadBuffer,
+    Buffer& quadIndexBuffer,
+    Buffer* circleBuffers);
     void drawFrame();
     
     bool isDeviceSuitable(VkPhysicalDevice device);

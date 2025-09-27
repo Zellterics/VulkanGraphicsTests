@@ -11,10 +11,9 @@
 ProtoThiApp::ProtoThiApp() : windowManager(WIDTH, HEIGHT, "vulkan"){
     zoom = 1;
     offset = {0, 0};
-    updateUBOFlag = true;
     framebufferResized = false;
     clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}}; // NEGRO ESTANDAR
-    
+    currentFrame = 0;
     vertices = {
         {{ 0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
         {{ 0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
@@ -33,8 +32,6 @@ ProtoThiApp::ProtoThiApp() : windowManager(WIDTH, HEIGHT, "vulkan"){
     indices = {
         0, 1, 2, 2, 3, 0, 4, 1, 0
     };
-
-    ubo = {};
 
     quadVertices = {
         {{-1.f, -1.f}, {-1.0f, -1.0f}},
@@ -86,9 +83,9 @@ void ProtoThiApp::initVulkan() {
     pipelineManager.createPipelines();
     createCommandPool();
     bufferManager = BufferManager{device, physicalDevice, commandPool, graphicsQueue};
-    createCustomBuffers();
-    createUniformBuffers();
-    pipelineManager.createDescriptors(uniformBuffers);
+    bufferManager.createCustomBuffers(vertices, indices, quadVertices, quadIndices, circleCenters);
+    bufferManager.createUniformBuffers();
+    pipelineManager.createDescriptors(bufferManager.getUniformBuffers());
     createCommandBuffers();
     swapChainManager.createSyncObjects();
 }
@@ -113,35 +110,8 @@ void ProtoThiApp::cleanup() {
         vkDestroySemaphore(device, swapChainManager.getImageAvailableSemaphores()[i], nullptr);
         vkDestroyFence(device, swapChainManager.getInFlightFences()[i], nullptr);
     }
-    quadBuffer.~Buffer();  
-    quadIndexBuffer.~Buffer();
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vertexBuffers[i].~Buffer();
-        indexBuffers[i].~Buffer();  
-        uniformBuffers[i].~Buffer(); 
-        circleBuffers[i].~Buffer();  
-    }
-
-    for (auto& dyn : stagingBuffers) {
-        if (dyn.isMapped) {
-            vkUnmapMemory(device, dyn.stagingBuffer.memory);
-            dyn.isMapped = false;
-            dyn.mappedData = nullptr;
-        }
-        if (dyn.stagingBuffer.buffer != VK_NULL_HANDLE)
-            vkDestroyBuffer(device, dyn.stagingBuffer.buffer, nullptr);
-        if (dyn.stagingBuffer.memory != VK_NULL_HANDLE)
-            vkFreeMemory(device, dyn.stagingBuffer.memory, nullptr);
-        dyn.stagingBuffer.buffer = VK_NULL_HANDLE;
-        dyn.stagingBuffer.memory = VK_NULL_HANDLE;
-    }
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-        if (uniformBuffers[i].buffer != VK_NULL_HANDLE)
-            vkDestroyBuffer(device, uniformBuffers[i].buffer, nullptr);
-        if (uniformBuffers[i].memory != VK_NULL_HANDLE)
-            vkFreeMemory(device, uniformBuffers[i].memory, nullptr);
-    }
     
+    bufferManager.cleanUp();
     // while(!graphicsPipelines.empty()){
     //     vkDestroyPipeline(device, graphicsPipelines.back(), nullptr);
     //     graphicsPipelines.pop_back();
@@ -184,7 +154,7 @@ void ProtoThiApp::drawFrame() {
     vkResetFences(device, 1, &swapChainManager.getInFlightFences()[currentFrame]);
 
     vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
-    recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+    recordCommandBuffer(commandBuffers[currentFrame], imageIndex, bufferManager.getVertexBuffers(), bufferManager.getIndexBuffers(), bufferManager.getQuadBuffer(), bufferManager.getQuadIndexBuffer(), bufferManager.getCircleBuffers());
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

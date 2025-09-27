@@ -28,7 +28,7 @@ std::vector<Circle>* ProtoThiApp::getCircleDrawVector(){
 void ProtoThiApp::setZoomAndOffset(float zoom, glm::vec2 offset){
     this->zoom = zoom;
     this->offset = offset;
-    updateUBOFlag = true;
+    bufferManager.setUpdateUBOFlag(true);
 }
 
 void ProtoThiApp::setBackgroundColor(glm::vec4 color){

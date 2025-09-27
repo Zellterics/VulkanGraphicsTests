@@ -50,7 +50,7 @@ void UI(ProtoThiApp& api, FPSCounter& fps){
     Slider2DFloat("Spawn Point", &spawnPoint[0], &spawnPoint[1], -1.0f, 1.0f, -1.0f, 1.0f);
     Slider2DFloat("Gravity", &gravity[0], &gravity[1], -5.0f, 5.0f, -5.0f, 5.0f);
     ImGui::SliderFloat("spawnRad: ", &spawnRadius, 0.0f, 100.0f, "%.3f");
-    ImGui::Text("Real FPS: %d", (int)(fps.getFPS()));
+    ImGui::Text("Real FPS: %d", (int)(fps.getFPS() + 1));
 
     if (ImGui::Button("Random Triangle")) {
         float x = getRandomNumber(-400.f, 400.f);
@@ -95,7 +95,7 @@ void UI(ProtoThiApp& api, FPSCounter& fps){
         simHeight = (int)node->CentralNode->Size.y;
     }
 
-    fps.delay(1 / (float)(speed + 1));
+    fps.delay(1 / (float)(speed));
     if(fps.frame()){
         #ifdef DEBUG
         std::cout << "\ncircles: " << api.getCircleAmount() << "  ";

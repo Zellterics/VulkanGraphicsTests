@@ -1,45 +1,10 @@
-#include <ThING/core.h>
-#include <vulkan/vulkan_core.h>
-
-// Dear ImGui
-#include "imgui.h"
-
-// Backends (GLFW + Vulkan)
+#include "ThING/consts.h"
+#include "ThING/types/buffer.h"
 #include "backends/imgui_impl_vulkan.h"
-
-void ProtoThiApp::createCustomBuffers(){
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
-        vertexBuffers[i].device = device;
-        bufferManager.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffers[i].buffer, vertexBuffers[i].memory);
-        bufferManager.uploadBuffer(bufferSize, &vertexBuffers[i].buffer, vertices.data());
-    }
-
-    bufferSize = sizeof(indices[0]) * indices.size();
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
-        indexBuffers[i].device = device;
-        bufferManager.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffers[i].buffer, indexBuffers[i].memory);
-        bufferManager.uploadBuffer(bufferSize, &indexBuffers[i].buffer, indices.data());
-    }
-
-    bufferSize = sizeof(quadVertices[0]) * quadVertices.size();
-    quadBuffer.device = device;
-    bufferManager.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, quadBuffer.buffer, quadBuffer.memory);
-    bufferManager.uploadBuffer(bufferSize, &quadBuffer.buffer, quadVertices.data());
-
-    bufferSize = sizeof(quadIndices[0]) * quadIndices.size();
-    quadIndexBuffer.device = device;
-    bufferManager.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, quadIndexBuffer.buffer, quadIndexBuffer.memory);
-    bufferManager.uploadBuffer(bufferSize, &quadIndexBuffer.buffer, quadIndices.data());
-
-    bufferSize = sizeof(circleCenters[0]) * circleCenters.size();
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
-        circleBuffers[i].device = device;
-        bufferManager.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, circleBuffers[i].buffer, circleBuffers[i].memory);
-        bufferManager.uploadBuffer(bufferSize, &circleBuffers[i].buffer, circleCenters.data());
-    }
-}
-
+#include "imgui.h"
+#include <ThING/core.h>
+#include <cstdint>
+#include <vector>
 void ProtoThiApp::createCommandBuffers() {
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo allocInfo{};
@@ -52,8 +17,14 @@ void ProtoThiApp::createCommandBuffers() {
     }
 }
 
-void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-    VkCommandBufferBeginInfo beginInfo{};
+void ProtoThiApp::recordCommandBuffer(VkCommandBuffer commandBuffer, 
+    uint32_t imageIndex,
+    Buffer* vertexBuffers,
+    Buffer* indexBuffers,
+    Buffer& quadBuffer,
+    Buffer& quadIndexBuffer,
+    Buffer* circleBuffers) {
+     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
     if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
