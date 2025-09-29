@@ -22,6 +22,9 @@ namespace ThING{
         std::string makeUniqueId(std::string baseId);
         void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>& ver, std::vector<uint16_t>& ind);
         void addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>&& ver, std::vector<uint16_t>&& ind);
+        Polygon& getPolygon(std::string id);
+        bool exists(Polygon& polygon);
+        bool addRegularPol(std::string id, size_t sides, glm::vec2 pos, glm::vec2 scale, glm::vec3 color);
     private:
         void mainLoop();
 

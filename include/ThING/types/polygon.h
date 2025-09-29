@@ -17,5 +17,21 @@ struct Polygon{
     static constexpr unsigned long PushConstantSize(){
         return sizeof(PushConstantData);
     }
+    Polygon(){
+        id = NULL_POLYGON_ID;
+        alive = false;
+    }
+    Polygon(std::string id){
+        this->id = id;
+    }
+    Polygon(const std::string& id, const uint32_t& vertexOffset, const uint32_t& vertexCount, const uint32_t& indexOffset, const uint32_t& indexCount, const bool& alive, const PushConstantData& pushConstant){
+        this->id = id;
+        this->vertexOffset = vertexOffset;
+        this->vertexCount = vertexCount;
+        this->indexOffset = indexOffset;
+        this->indexCount = indexCount;
+        this->alive = alive;
+        this->pushConstant = pushConstant;
+    }
 };
 

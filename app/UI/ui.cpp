@@ -53,17 +53,12 @@ void UI(ThING::API& api, FPSCounter& fps){
     ImGui::Text("Real FPS: %d", (int)(fps.getFPS() + 1));
 
     if (ImGui::Button("Random Triangle")) {
-        float x = getRandomNumber(-400.f, 400.f);
+        int sides = getRandomNumber(3, 15);
+        float x = getRandomNumber(-200.f, 600.f);
         float y = getRandomNumber(-400.f, 400.f);
-        std::vector<Vertex> vertices = {
-            {{-1.f, -1.f}, {1.f, 0.f, 0.f}},
-            {{ 1.f, -1.f}, {0.f, 1.f, 0.f}},
-            {{  0.f,  1.f}, {0.f, 0.f, 1.f}},
-        };
-        std::vector<uint16_t> indices = {0,1,2};
-
+        glm::vec2 scale = {abs(x), abs(y)};
         std::string polyId = "poly";
-        api.addPolygon(polyId, {x, y}, 0.0f, {40.0f, 40.0f}, std::move(vertices), std::move(indices));
+        api.addRegularPol(polyId, sides, {x,y}, {40,40}, {getRandomNumber(0.f, 1.f),getRandomNumber(0.f, 1.f),getRandomNumber(0.f, 1.f)});
     }
 
     if (ImGui::TreeNode("EXTRAS")) {

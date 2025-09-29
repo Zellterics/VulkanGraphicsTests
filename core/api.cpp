@@ -134,14 +134,14 @@ std::string ThING::API::makeUniqueId(std::string baseId) {
 
 
 void ThING::API::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>& ver, std::vector<uint16_t>& ind){
-    app.polygons.push_back({makeUniqueId(id), 
+    app.polygons.emplace_back(makeUniqueId(id), //CHECK EMPLACE VS PUSH BACK IN REFERENCE AND RVALUE REFERENCE
         static_cast<uint32_t>(app.vertices.size()), 
         static_cast<uint32_t>(ver.size()),
         static_cast<uint32_t>(app.indices.size()),
         static_cast<uint32_t>(ind.size()),
         true,
-        build2DTransform(pos, rotation, scale)
-    });
+        PushConstantData{ build2DTransform(pos, rotation, scale)}
+    );
     app.vertices.reserve(app.vertices.size() + ver.size());
     app.indices.reserve(app.indices.size() + app.indices.size());
     app.vertices.insert(app.vertices.end(), ver.begin(), ver.end());
@@ -149,14 +149,14 @@ void ThING::API::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm:
 }
 
 void ThING::API::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm::vec2 scale, std::vector<Vertex>&& ver, std::vector<uint16_t>&& ind){
-    app.polygons.push_back({makeUniqueId(id), 
+    app.polygons.emplace_back(makeUniqueId(id), //CHECK EMPLACE VS PUSH BACK IN REFERENCE AND RVALUE REFERENCE
         static_cast<uint32_t>(app.vertices.size()), 
         static_cast<uint32_t>(ver.size()),
         static_cast<uint32_t>(app.indices.size()),
         static_cast<uint32_t>(ind.size()),
         true,
-        build2DTransform(pos, rotation, scale)
-    });
+        PushConstantData{ build2DTransform(pos, rotation, scale)}
+);
     app.vertices.reserve(app.vertices.size() + ver.size());
     app.indices.reserve(app.indices.size() + ind.size());
     app.vertices.insert(app.vertices.end(), std::make_move_iterator(ver.begin()), std::make_move_iterator(ver.end()));
@@ -165,3 +165,37 @@ void ThING::API::addPolygon(std::string& id, glm::vec2 pos, float rotation, glm:
     std::cout << app.indices.size() << std::endl;
 }
 
+Polygon& ThING::API::getPolygon(std::string id){
+    for(Polygon& pol : app.polygons)
+        if(pol.id == id)
+            return pol;
+    app.polygons.emplace_back();
+    return app.polygons.back();
+}
+
+bool ThING::API::exists(Polygon& polygon){
+    if(polygon.alive)
+        return true;
+    return false;
+}
+
+bool ThING::API::addRegularPol(std::string id, size_t sides, glm::vec2 pos, glm::vec2 scale, glm::vec3 color){
+    if(sides < 3){
+        return false;
+    }
+    std::vector<Vertex> vertices;
+    vertices.reserve(sides);
+    for(int i = 0; i < sides; i++){
+        vertices.push_back({{sin((6.28 * i / (float)sides)), cos((6.28 * i / (float)sides))}, color});
+    }
+    std::vector<uint16_t> indices;
+    indices.reserve(sides);
+    for(int i = 0; i < sides - 1;){
+        indices.push_back(0);
+        indices.push_back(++i);
+        indices.push_back(++i);
+        i--;
+    }
+    addPolygon(id, pos, 0.f, scale, std::move(vertices), std::move(indices));
+    return true;
+}
