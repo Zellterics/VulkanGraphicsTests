@@ -1,10 +1,14 @@
-#include "core.cpp"
+#include <ThING/core.h>
+#include <ostream>
+#include "ui.h"
+#include "update.h"
 
 int main() {
-    ProtoThiApp app;
-
+    ThING::API api;
+    api.setUICallback(UI);
+    api.setUpdateCallback(update);
     try {
-        app.run();
+        api.run();
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;

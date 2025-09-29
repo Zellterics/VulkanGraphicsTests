@@ -1,23 +1,28 @@
-#include "core.h"
+#include "update.h"
+#include <ThING/core.h>
+#include "globals.h"
 #include "physicsObject.h"
 #include <thread>
 
-void ProtoThiApp::update(float deltaTime){
-    static std::vector<PhysicsObject> circlePhysics = {{{-50.f, -50.f},{-50.f, -50.f},{0,0}}};
-    glm::vec2 randomPos = {getRandomFloat(100.0f,-100.0f), getRandomFloat(-300.0f,-280.0f)};
-    const int BIGGER_RADIUS = 8;
-    const int BIGGER_RADIUS_MINUS = BIGGER_RADIUS - 1;
-    const int SMALLER_RADIUS = 4;
-    circleCenters.push_back({randomPos,getRandomFloat(SMALLER_RADIUS,BIGGER_RADIUS), {getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f, getRandomFloat(0.0f,100.0f)/100.0f}});
-    circlePhysics.push_back({randomPos, randomPos, {0.f,0.f}});
-    const int steps = 2;
-    const float sub_dt = deltaTime / (float)steps;
+void update(ThING::API& api, FPSCounter& fps){
+    std::vector<Circle>* circleCenters = api.getCircleDrawVector();
     int x, y;
     static bool changedResolution = false;
-    glfwGetWindowSize(window, &x, &y);
+    api.getWindowSize(&x, &y);
     x /= 2;
     y /= 2;
-    int circleAmount = circleCenters.size();
+    static std::vector<PhysicsObject> circlePhysics = {{{-50.f, -50.f},{-50.f, -50.f},{0,0}}};
+    glm::vec2 randomPos = {
+        getRandomNumber((x - dockedSizeX / 2.f) * spawnPoint[0] + dockedSizeX / 2.f, ((x - dockedSizeX / 2.f - spawnRadius) * spawnPoint[0]) + spawnRadius + dockedSizeX / 2.f), 
+        getRandomNumber(y * spawnPoint[1], ((y - spawnRadius) * spawnPoint[1]) + spawnRadius)};
+    const float BIGGER_RADIUS = 8;
+    const float BIGGER_RADIUS_MINUS = BIGGER_RADIUS - 1;
+    const float SMALLER_RADIUS = 4;
+    (*circleCenters).push_back({randomPos,getRandomNumber(SMALLER_RADIUS,BIGGER_RADIUS), {getRandomNumber(0.0f,100.0f)/100.0f, getRandomNumber(0.0f,100.0f)/100.0f, getRandomNumber(0.0f,100.0f)/100.0f}});
+    circlePhysics.push_back({randomPos, randomPos, {0.f,0.f}});
+    const int steps = 2;
+    const float sub_dt = simSpeed / (float)steps;
+    int circleAmount = api.getCircleAmount();
     int gridWidth = (x + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
     int gridHeight = (y + BIGGER_RADIUS_MINUS) / BIGGER_RADIUS;
     static std::vector<std::vector<int>> circleID(gridWidth * gridHeight);
@@ -48,8 +53,8 @@ void ProtoThiApp::update(float deltaTime){
             clearID.clear();
         }
         for (int i = 0; i < circleAmount; i++){
-            int gridX = ((circleCenters[i].pos.x + x) / 2) / BIGGER_RADIUS;
-            int gridY = ((circleCenters[i].pos.y + y) / 2) / BIGGER_RADIUS;
+            int gridX = (((*circleCenters)[i].pos.x + x) / 2) / BIGGER_RADIUS;
+            int gridY = (((*circleCenters)[i].pos.y + y) / 2) / BIGGER_RADIUS;
             int index = (gridY * gridWidth) + gridX;
             if (gridX >= 0 && gridX < gridWidth &&
                 gridY >= 0 && gridY < gridHeight) {
@@ -58,14 +63,14 @@ void ProtoThiApp::update(float deltaTime){
         }
 
         for(PhysicsObject& circle : circlePhysics){
-            circle.accelerate({0.f, 1.f});
+            circle.accelerate({gravity[0], gravity[1]});
         }
         auto calculateCollissions = [&] (int start, int finish){
         for (int x = start; x < finish; x++) { // 20 veces extremadamente rapido
             for (int y = 0; y < gridHeight; y++) { // 20 veces extremadamente rapido
                 for (int ID : circleID[(y * gridWidth) + x]) {     // cantidad de objetos
                     PhysicsObject &actualCirclePhysics = circlePhysics[ID];
-                    Circle &actualCircleCenter = circleCenters[ID];
+                    Circle &actualCircleCenter = (*circleCenters)[ID];
                     for (int j = 0; j <= 1; j++) {   //2 veces
                         for (int k = -1; k <= 1; k++) { // 3 veces
                             if(j == 0 && k==1)
@@ -81,7 +86,7 @@ void ProtoThiApp::update(float deltaTime){
                                 if(j == 0 && k == 0 && ID > neighbor) continue;
 
                                 PhysicsObject &neighborCirclePhysics = circlePhysics[neighbor];
-                                Circle &neighborCircleCenter = circleCenters[neighbor];
+                                Circle &neighborCircleCenter = (*circleCenters)[neighbor];
 
                                 glm::vec2 collision = actualCirclePhysics.currentPos - neighborCirclePhysics.currentPos;
                                 float summedSize = actualCircleCenter.size + neighborCircleCenter.size;
@@ -123,28 +128,25 @@ void ProtoThiApp::update(float deltaTime){
         for(int i = 0; i < circleAmount; i++){
             circlePhysics[i].updatePos(sub_dt);
 
-            circleCenters[i].pos = circlePhysics[i].currentPos;
+            (*circleCenters)[i].pos = circlePhysics[i].currentPos;
         }
         for(int i = 0; i < circleAmount; i++){
-            const glm::vec2 minBound{-x, -y};
-            const glm::vec2 maxBound{x, y};
-            
-            if (circlePhysics[i].currentPos.x < minBound.x + circleCenters[i].size){ 
-                float delta = (minBound.x + circleCenters[i].size) - circlePhysics[i].currentPos.x;
-                circlePhysics[i].currentPos.x += delta;
+            const glm::vec2 minBound{-x + dockedSizeX, -y};
+            const glm::vec2 maxBound{ x, y};
+
+            if (circlePhysics[i].currentPos.x < minBound.x + (*circleCenters)[i].size){ 
+                circlePhysics[i].currentPos.x = minBound.x + (*circleCenters)[i].size;
             }
-            if (circlePhysics[i].currentPos.x > maxBound.x - circleCenters[i].size) {
-                float delta = circlePhysics[i].currentPos.x - (maxBound.x - circleCenters[i].size);
-                circlePhysics[i].currentPos.x -= delta;
-            };
-            if (circlePhysics[i].currentPos.y < minBound.y + circleCenters[i].size) {
-                float delta = (minBound.y + circleCenters[i].size) - circlePhysics[i].currentPos.y;
-                circlePhysics[i].currentPos.y += delta;
-            };
-            if (circlePhysics[i].currentPos.y > maxBound.y - circleCenters[i].size) {
-                float delta = circlePhysics[i].currentPos.y - (maxBound.y - circleCenters[i].size);
-                circlePhysics[i].currentPos.y -= delta;
-            };
+            if (circlePhysics[i].currentPos.x > maxBound.x - (*circleCenters)[i].size) {
+                circlePhysics[i].currentPos.x = maxBound.x - (*circleCenters)[i].size;
+            }
+            if (circlePhysics[i].currentPos.y < minBound.y + (*circleCenters)[i].size) {
+                circlePhysics[i].currentPos.y = minBound.y + (*circleCenters)[i].size;
+            }
+            if (circlePhysics[i].currentPos.y > maxBound.y - (*circleCenters)[i].size) {
+                circlePhysics[i].currentPos.y = maxBound.y - (*circleCenters)[i].size;
+            }
         }
+
     }
 }

@@ -1,22 +1,30 @@
 ## Project
 
-Right now it doesn't have much but I plan to update it for some time
+Now with ImGui!!
+capacity up to 16k balls with 60 fps
+<img width="1196" height="830" alt="image" src="https://github.com/user-attachments/assets/d6a2dc6c-c589-4b10-af32-f802f96a3842" />
 
-Now with some physics!
-capacity up to 15k balls with 60 fps -> Still working to have more
-![image](https://github.com/user-attachments/assets/888d713a-de1a-450a-b1c2-a9e5e3d91722)
 
 ## Build
 
 Install the vulkan sdk on the official website and enable everything except for Volk if you don't want it, then just compile with cmake.
 
-every other dependency has it's folder named, just install from their specific github repo to there.
-### YOU CAN TRY IS NOT THAT EASY, I'M WORKING ON IT.
+Every other dependency has it's folder named, just install from their specific github repo to there.
+
+### LIMITS
+
+The executable needs to be run in the same folder, example: ./VulkanGLFWProject. Not outside of the scope
+
+The shaders MUST be in the shaders folder, the font Monocraft.ttf MUST be on the external folder, and the executable MUST be on the build folder
+
+If you don't like this and want the executable alone, you can use tools to compile the shaders and the font on a .h header file to be include and fix some code
+
+WARNING: THIS CODE RUNS ON GCC, any msvc or clang run attempt might need corrections
 
 ## Platform
 WINDOWS
 Install Vulkan SDK
 
 Linux 
-Install Vulkan SDK 
+Install Vulkan libs
 Arch Example: sudo pacman -S vulkan-headers vulkan-icd-loader vulkan-tools

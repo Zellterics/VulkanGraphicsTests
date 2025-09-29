@@ -1,5 +1,6 @@
-#pragma once
-#include "core.h"
+#include <ThING/core.h>
+#include <ThING/extras/vulkanSupport.h>
+#include <cstring>
 
 void ProtoThiApp::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
     createInfo = {};
